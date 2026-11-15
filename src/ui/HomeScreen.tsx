@@ -6,17 +6,18 @@ import { brand } from '@/config/brand';
 import { CampaignHub } from './CampaignHub';
 import { useLocale } from './locale';
 import { SiteHeader } from './SiteHeader';
+import './league.css';
 
 export function HomeScreen() {
   const { t } = useLocale();
   return (
-    <>
+    <div className="league-home">
       <SiteHeader active="maps" />
       <main>
         <section className="entry flex items-center" aria-labelledby="home-title">
           <picture className="entry-art">
             <source media="(max-width: 650px)" srcSet="/images/amber-trail-mobile.webp" />
-            <Image src="/images/amber-trail.webp" alt="" fill unoptimized fetchPriority="high" sizes="100vw" />
+            <Image src="/images/amber-trail.webp" alt="" fill unoptimized fetchPriority="high" loading="eager" sizes="100vw" />
           </picture>
           <Image src="/images/pokemon/4-hero.webp" alt="" width={600} height={600} unoptimized className="entry-pokemon entry-charmander" />
           <Image src="/images/pokemon/25-hero.webp" alt="" width={600} height={600} unoptimized className="entry-pokemon entry-pikachu" />
@@ -29,6 +30,6 @@ export function HomeScreen() {
         </section>
         <CampaignHub />
       </main>
-    </>
+    </div>
   );
 }

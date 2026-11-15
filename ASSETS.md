@@ -9,6 +9,7 @@ Os modelos, as ilustrações, os cenários e o áudio originais de Pokémon Towe
 | `public/images/map-forest.webp`, `map-cave.webp`, `map-volcano.webp` | Capturas dos tabuleiros originais deste projeto | [CC0 1.0][cc0] |
 | `public/images/creatures/*.webp` | Oito retratos renderizados a partir dos GLBs originais | [CC0 1.0][cc0] |
 | `public/images/amber-wood*.webp` e `public/images/amber-trail*.webp` | Ilustrações de cenário criadas com o ImageGen da OpenAI. [Prompts registrados](DECISIONS.md) | [CC0 1.0][cc0] |
+| `public/images/league/{kanto,johto,hoenn}.webp` | Panoramas originais da seleção de regiões criados com o ImageGen da OpenAI e recortados de uma prancha de três faixas. [Prompt registrado](DECISIONS.md) | [CC0 1.0][cc0] |
 | GLBs remotos de Pokémon | [Pokémon 3D API Assets][pokemon-assets], revisão `429de1288cea0d43f5b4f56305d2276e94239d65` | Direitos dos respectivos titulares de Pokémon. [Aviso do fornecedor][pokemon-rights] |
 | `public/images/pokemon/*.webp` e `src/app/icon.png` | Retratos, poses de menu e ícone renderizados dos mesmos GLBs de Pokémon | Direitos dos respectivos titulares de Pokémon. [Aviso do fornecedor][pokemon-rights] |
 | `public/audio/forest.mp3`, `cave.mp3`, `volcano.mp3` | Três trilhas instrumentais originais para floresta, caverna e vulcão, compostas e sintetizadas por [scripts/generate-audio.py](scripts/generate-audio.py) | [CC0 1.0][cc0] |

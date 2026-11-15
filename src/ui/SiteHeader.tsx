@@ -7,7 +7,7 @@ export function SiteHeader({ active, action }: { active?: 'maps' | 'collection';
   const { t } = useLocale();
   return (
     <header className="battle-header site-header">
-      <Link href="/" className="wordmark"><span><Sprout size={20} aria-hidden="true" /></span>{brand.name}</Link>
+      <Link href="/" className="wordmark"><span>{active === 'maps' ? <i className="league-ball" aria-hidden="true" /> : <Sprout size={20} aria-hidden="true" />}</span>{brand.name}</Link>
       <div className="site-tools">
         <nav className="site-nav" aria-label={t.navigation}>
           <Link href="/#expedicoes" aria-current={active === 'maps' ? 'page' : undefined}><Map size={16} aria-hidden="true" /> {t.expeditions}</Link>
