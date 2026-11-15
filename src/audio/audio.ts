@@ -1,4 +1,5 @@
 import { Howl, Howler } from "howler";
+import type { CampaignRegionId } from "@/data/campaign/gyms";
 import type { ElementId } from "@/data/elements";
 import type { MapId } from "@/data/maps/types";
 import { playAttackCue, preloadAttackSounds, stopAttackSounds, type AttackSoundPhase } from "./attackSounds";
@@ -21,23 +22,24 @@ const cues = {
 
 type SoundName = keyof typeof cues;
 export type AudioCue = SoundName | "hit";
+export type BattleMusicTrack = MapId | `gym-${CampaignRegionId}`;
 
 const sounds = new Map<SoundName, Howl>();
 const lastPlayed = new Map<SoundName, number>();
 let unlocked = false;
 let muted = false;
-let requestedMap: MapId | null = null;
-let music: { mapId: MapId; howl: Howl } | null = null;
+let requestedTrack: BattleMusicTrack | null = null;
+let music: { track: BattleMusicTrack; howl: Howl } | null = null;
 
 function updateMusic() {
-  if (music && music.mapId !== requestedMap) {
+  if (music && music.track !== requestedTrack) {
     music.howl.unload();
     music = null;
   }
-  if (!unlocked || muted || !requestedMap || music) return;
+  if (!unlocked || muted || !requestedTrack || music) return;
 
-  const howl = new Howl({ src: [`/audio/${requestedMap}.mp3`], loop: true, volume: 0.28 });
-  music = { mapId: requestedMap, howl };
+  const howl = new Howl({ src: [`/audio/${requestedTrack}.mp3`], loop: true, volume: 0.28 });
+  music = { track: requestedTrack, howl };
   howl.play();
 }
 
@@ -59,8 +61,8 @@ export function setAudioMuted(nextMuted: boolean) {
   updateMusic();
 }
 
-export function playMapMusic(mapId: MapId | null) {
-  requestedMap = mapId;
+export function playBattleMusic(track: BattleMusicTrack | null) {
+  requestedTrack = track;
   updateMusic();
 }
 

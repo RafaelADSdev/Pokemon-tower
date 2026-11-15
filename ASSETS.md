@@ -1,6 +1,6 @@
 # Assets e licenças
 
-Os modelos, as ilustrações, os cenários e o áudio originais de Pokémon Tower League são disponibilizados sob [CC0 1.0 Universal][cc0]. As dependências visuais de terceiros mantêm suas licenças abaixo.
+Os modelos, as ilustrações, os cenários e o áudio criados para Pokémon Tower League são disponibilizados sob [CC0 1.0 Universal][cc0]. As obras de terceiros mantêm os direitos indicados abaixo.
 
 | Asset | Origem | Licença |
 | --- | --- | --- |
@@ -14,6 +14,9 @@ Os modelos, as ilustrações, os cenários e o áudio originais de Pokémon Towe
 | `public/images/pokemon/*.webp` e `src/app/icon.png` | Retratos, poses de menu e ícone renderizados dos mesmos GLBs de Pokémon | Direitos dos respectivos titulares de Pokémon. [Aviso do fornecedor][pokemon-rights] |
 | `public/images/badges/*.png` | Insígnias das ligas de Kanto, Johto e Hoenn. [Catálogo de insígnias][pokemon-badges] | Direitos dos respectivos titulares de Pokémon |
 | `public/audio/forest.mp3`, `cave.mp3`, `volcano.mp3` | Três trilhas instrumentais originais para floresta, caverna e vulcão, compostas e sintetizadas por [scripts/generate-audio.py](scripts/generate-audio.py) | [CC0 1.0][cc0] |
+| `public/audio/gym-kanto.mp3` | Tema de batalha dos líderes de Pokémon Red, Blue e Yellow. Áudio de `red.mpeg`, fornecido pelo usuário. | Direitos dos respectivos titulares de Pokémon |
+| `public/audio/gym-johto.mp3` | Tema de batalha dos líderes de Johto em Pokémon Gold, Silver e Crystal. Áudio de `johto.mpeg`, fornecido pelo usuário. | Direitos dos respectivos titulares de Pokémon |
+| `public/audio/gym-hoenn.mp3` | Tema de batalha dos líderes de Pokémon Ruby, Sapphire e Emerald. Áudio de `ruby.mpeg`, fornecido pelo usuário. | Direitos dos respectivos titulares de Pokémon |
 | `public/audio/{boss,death,defeat,impact,leak,pause,place,sell,shot,ui,upgrade,victory,wave}.mp3` | Treze efeitos originais sintetizados por [scripts/generate-audio.py](scripts/generate-audio.py) | [CC0 1.0][cc0] |
 | `public/audio/attack-sfx.mp3` | Doze efeitos originais de disparo e impacto, dois por elemento, sintetizados por [scripts/generate-attack-audio.py](scripts/generate-attack-audio.py) | [CC0 1.0][cc0] |
 | DM Serif Text | `@fontsource/dm-serif-text` com licença no pacote. [Fontsource][dm] | [SIL OFL 1.1][ofl] |
@@ -43,7 +46,9 @@ O repositório informa que os modelos pertencem a Nintendo, Creatures Inc. e GAM
 
 ## Áudio
 
-As faixas são estéreo e têm aproximadamente 19, 23 e 17 segundos. O áudio completo ocupa 511.940 bytes e é carregado sob demanda após interação. Para regenerar os arquivos, execute `python scripts/generate-audio.py` com NumPy e FFmpeg disponíveis. O script também aceita o FFmpeg fornecido por `imageio-ffmpeg`.
+As trilhas tocam em loop e são carregadas sob demanda após interação. Os arquivos dos ginásios contêm o áudio dos arquivos fornecidos, copiado para MP3 com FFmpeg sem recodificação. Para regenerar as trilhas clássicas e os efeitos, execute `python scripts/generate-audio.py` com NumPy e FFmpeg.
+
+As composições retrô anteriores são CC0 e podem ser geradas em uma pasta separada com `python scripts/generate-gym-music.py <pasta>`.
 
 [cc0]: https://creativecommons.org/publicdomain/zero/1.0/
 [dm]: https://fontsource.org/fonts/dm-serif-text

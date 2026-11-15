@@ -45,13 +45,13 @@ export function Battlefield({ map, expedition }: { map: MapDefinition; expeditio
   }));
   const game = useStore(runtime.store);
   const { t, localized, describe } = useLocale();
-  const { muted, toggleMuted } = useBattleAudio(runtime, map.id);
+  const gym = expedition?.kind === 'gym' ? expedition : undefined;
+  const { muted, toggleMuted } = useBattleAudio(runtime, gym ? `gym-${gym.regionId}` : map.id);
   const { totalStars, expeditionResults } = useProgress();
   const [previewEnemy, setPreviewEnemy] = useState<EnemyDefinition | null>(null);
   const { money, lives, wave, selectedSlot, selectSlot, occupiedSlots, selectedEnemyId, status } = game;
   const enemy = selectedEnemyId === null ? previewEnemy : runtime.getEnemy(selectedEnemyId)?.enemy.definition;
   const ended = status === 'victory' || status === 'defeat';
-  const gym = expedition?.kind === 'gym' ? expedition : undefined;
   const region = regionalExpedition && campaignRegions.find(({ id }) => id === regionalExpedition.regionId);
   const battleContext = gym ? t.gymLeader(gym.leader) : expedition?.kind === 'route'
     ? localized({ name: map.subtitle, nameEn: map.subtitleEn }) : undefined;

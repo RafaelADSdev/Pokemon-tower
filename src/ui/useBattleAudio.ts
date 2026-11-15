@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useSyncExternalStore } from 'react';
-import { playAttackSound, playMapMusic, playSound, setAudioMuted, unlockAudio } from '@/audio/audio';
-import type { MapId } from '@/data/maps/types';
+import { playAttackSound, playBattleMusic, playSound, setAudioMuted, unlockAudio, type BattleMusicTrack } from '@/audio/audio';
 import type { GameRuntime } from '@/game/runtime';
 
 const storageKey = 'critter-defense.muted';
@@ -23,7 +22,7 @@ function subscribe(callback: () => void) {
   };
 }
 
-export function useBattleAudio(runtime: GameRuntime, mapId: MapId) {
+export function useBattleAudio(runtime: GameRuntime, track: BattleMusicTrack) {
   const muted = useSyncExternalStore(subscribe, getMuted, () => false);
 
   useEffect(() => { setAudioMuted(muted); }, [muted]);
@@ -32,7 +31,7 @@ export function useBattleAudio(runtime: GameRuntime, mapId: MapId) {
     const activate = () => unlockAudio();
     window.addEventListener('pointerup', activate, { capture: true, once: true });
     window.addEventListener('keydown', activate, { capture: true, once: true });
-    playMapMusic(mapId);
+    playBattleMusic(track);
     const unsubscribe = runtime.subscribeAudio((cue, element) => {
       if (element && (cue === 'shot' || cue === 'impact')) playAttackSound(element, cue);
       else playSound(cue);
@@ -41,9 +40,9 @@ export function useBattleAudio(runtime: GameRuntime, mapId: MapId) {
       window.removeEventListener('pointerup', activate, true);
       window.removeEventListener('keydown', activate, true);
       unsubscribe();
-      playMapMusic(null);
+      playBattleMusic(null);
     };
-  }, [mapId, runtime]);
+  }, [track, runtime]);
 
   function toggleMuted() {
     const next = !getMuted();
