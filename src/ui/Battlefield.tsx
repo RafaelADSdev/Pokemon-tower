@@ -13,7 +13,7 @@ import { getStarsForLives } from '@/data/progression';
 import { regionalRosters, tournamentRoster } from '@/data/regionalCreatures';
 import { createGameRuntime } from '@/game/runtime';
 import type { EnemyEntity } from '@/game/ecs/world';
-import { isExpeditionUnlocked, nextGym } from '@/lib/campaignProgress';
+import { isExpeditionUnlocked, nextExpedition } from '@/lib/campaignProgress';
 import { BattleControls } from './BattleControls';
 import { CreaturesPanel } from './CreaturesPanel';
 import { ElementGlyph, ElementInfo, ElementTag } from './ElementInfo';
@@ -37,10 +37,11 @@ function BoardLoading() {
 }
 
 export function Battlefield({ map, expedition }: { map: MapDefinition; expedition?: CampaignExpedition }) {
+  const regionalExpedition = expedition?.kind === 'tournament' ? undefined : expedition;
   const [runtime] = useState(() => createGameRuntime(map, {
     canUseCreature: canRecruitCreature,
     waves: expedition?.waves,
-    roster: expedition?.kind === 'gym' ? regionalRosters[expedition.regionId] : expedition && tournamentRoster,
+    roster: regionalExpedition ? regionalRosters[regionalExpedition.regionId] : expedition && tournamentRoster,
   }));
   const game = useStore(runtime.store);
   const { t, localized, describe } = useLocale();
@@ -51,8 +52,10 @@ export function Battlefield({ map, expedition }: { map: MapDefinition; expeditio
   const enemy = selectedEnemyId === null ? previewEnemy : runtime.getEnemy(selectedEnemyId)?.enemy.definition;
   const ended = status === 'victory' || status === 'defeat';
   const gym = expedition?.kind === 'gym' ? expedition : undefined;
-  const region = gym && campaignRegions.find(({ id }) => id === gym.regionId);
-  const next = gym && nextGym(gym);
+  const region = regionalExpedition && campaignRegions.find(({ id }) => id === regionalExpedition.regionId);
+  const battleContext = gym ? t.gymLeader(gym.leader) : expedition?.kind === 'route'
+    ? localized({ name: map.subtitle, nameEn: map.subtitleEn }) : undefined;
+  const next = expedition && nextExpedition(expedition);
   const canPlayNext = next && isExpeditionUnlocked(next, expeditionResults);
   const canPlayFinal = gym && !next && isExpeditionUnlocked(finalTournament, expeditionResults);
 
@@ -119,7 +122,12 @@ export function Battlefield({ map, expedition }: { map: MapDefinition; expeditio
           <div className="battle-identity">
             <Link href="/#expedicoes" className="back-link battle-back"><ArrowLeft size={15} aria-hidden="true" /> {t.expeditions}</Link>
             <h1 id="map-name">{localized(map)}</h1>
-            {region && gym && <p className="battle-gym-context"><MapPin size={15} aria-hidden="true" /> {localized(region)} <span aria-hidden="true">·</span> {t.gymLeader(gym.leader)}</p>}
+            {region && (
+              <p className="battle-gym-context">
+                <MapPin size={15} aria-hidden="true" /> {localized(region)}
+                {battleContext && <><span aria-hidden="true">·</span> {battleContext}</>}
+              </p>
+            )}
           </div>
           <div className="battle-summary">
             {gym && (
@@ -151,7 +159,7 @@ export function Battlefield({ map, expedition }: { map: MapDefinition; expeditio
                       </div>
                     )}
                     <p>{status === 'victory' ? t.victoryResult(lives) : t.defeatResult(wave)}</p>
-                    {status === 'victory' && canPlayNext && <Link className="gold-button" href={`/expeditions/${next.id}`}>{t.nextGym} <ArrowRight size={15} aria-hidden="true" /></Link>}
+                    {status === 'victory' && canPlayNext && <Link className="gold-button" href={`/expeditions/${next.id}`}>{t.nextBattle} <ArrowRight size={15} aria-hidden="true" /></Link>}
                     {status === 'victory' && canPlayFinal && <Link className="gold-button" href={`/expeditions/${finalTournament.id}`}>{t.enterTournament} <ArrowRight size={15} aria-hidden="true" /></Link>}
                     <button className={status === 'victory' && (canPlayNext || canPlayFinal) ? 'quiet-button' : 'gold-button'} onClick={() => { setPreviewEnemy(null); runtime.restart(); }}><RotateCcw size={15} aria-hidden="true" /> {t.replay}</button>
                     <Link href="/#expedicoes" className="overlay-map-link">{t.backToMaps}</Link>

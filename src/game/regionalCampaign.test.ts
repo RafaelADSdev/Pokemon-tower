@@ -42,10 +42,10 @@ const tournamentStrategy: readonly Purchase[] = [
 
 test.each(campaignExpeditions)('clears $id with the regular starting coins', (expedition) => {
   const { map, waves } = expedition;
-  const isGym = expedition.kind === 'gym';
-  const roster = isGym ? regionalRosters[expedition.regionId] : tournamentRoster;
-  const runtime = createGameRuntime(map, { waves, roster, seed: 333, canUseCreature: (id) => !isGym || getCreatureUnlockStars(id) === 0 });
-  const purchases: readonly Purchase[] = isGym ? strategies[map.id] : tournamentStrategy;
+  const isTournament = expedition.kind === 'tournament';
+  const roster = isTournament ? tournamentRoster : regionalRosters[expedition.regionId];
+  const runtime = createGameRuntime(map, { waves, roster, seed: 333, canUseCreature: (id) => isTournament || getCreatureUnlockStars(id) === 0 });
+  const purchases: readonly Purchase[] = isTournament ? tournamentStrategy : strategies[map.id];
   expect(runtime.roster).toBe(roster);
   expect(runtime.store.getState().maxWaves).toBe(waves.length);
   runtime.store.getState().setSpeed(3);

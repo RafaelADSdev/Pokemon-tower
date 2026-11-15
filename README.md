@@ -1,6 +1,6 @@
 # Pokémon Tower League
 
-Tower defense 3D de fã para navegador. Desafie 24 ginásios em Kanto, Johto e Hoenn, monte equipes de Pokémon nativos e conquiste as insígnias para entrar no Torneio Final.
+Tower defense 3D de fã para navegador. Explore 72 rotas e desafie 24 ginásios em Kanto, Johto e Hoenn. Monte equipes de Pokémon nativos e conquiste as insígnias para entrar no Torneio Final.
 
 ## Rodar localmente
 
@@ -17,7 +17,7 @@ O navegador carrega os modelos 3D conforme a partida precisa deles. Durante uma 
 
 ## Jogar
 
-- Escolha uma região e desafie o primeiro ginásio. Cada vitória conquista a insígnia do ginásio e libera o próximo da mesma região. As três regiões podem ser iniciadas em qualquer ordem.
+- Escolha uma região e vença três batalhas de rota para chegar a cada ginásio. No ginásio, passe pela classificação e derrote o líder para conquistar a insígnia e liberar a primeira rota do trecho seguinte. As três regiões podem ser iniciadas em qualquer ordem.
 - Selecione um espaço `+` no tabuleiro ou um botão de posição abaixo dele e implante um Pokémon com as moedas iniciais. A loja oferece oito famílias nativas da região em jogo.
 - Inicie a onda. As criaturas atacam automaticamente, e você recebe moedas por derrotar inimigos e concluir ondas. Você pode chamar a próxima enquanto a atual ainda está em andamento.
 - Selecione uma torre para melhorar, mudar a prioridade ou vender por 70% do total investido. Cada melhoria avança uma forma na cadeia evolutiva quando há outra forma no elenco. O nível 3 libera a habilidade final. A prévia da onda também permite inspecionar as fraquezas dos inimigos.
@@ -51,7 +51,7 @@ pnpm test
 pnpm build
 ```
 
-Os testes incluem vitórias nos 24 ginásios e nas 16 ondas do Torneio Final com as equipes da campanha. Também verificam o desbloqueio de ginásios por insígnias, os elencos regionais, os mapas clássicos e as regras de combate.
+Os testes incluem vitórias nas 72 rotas, nas duas batalhas de cada ginásio e nas 16 ondas do Torneio Final com as equipes da campanha. Também verificam o desbloqueio das batalhas, o progresso de partidas salvas antes das rotas, os elencos regionais, os mapas clássicos e as regras de combate.
 
 ### Benchmark com 300 inimigos
 

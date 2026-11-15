@@ -14,6 +14,77 @@ function wavesForLanes(groups: readonly WaveGroup[], waveIndex: number, lanes: n
   return groups.map((spawn, index) => ({ ...spawn, pathIndex: (waveIndex + index) % lanes }));
 }
 
+function approachWaves(
+  waves: readonly (readonly WaveGroup[])[], lanes: number, health: number, speed: number,
+): WaveDefinition[] {
+  return waves.map((groups, waveIndex) => {
+    const wave = createWave(waveIndex + 1, wavesForLanes(groups, waveIndex, lanes));
+    return { ...wave, healthScale: wave.healthScale * health, speedScale: wave.speedScale * speed };
+  });
+}
+
+export function makeRouteWaves(
+  roster: RegionalEnemies,
+  signature: string,
+  regionIndex: number,
+  gymIndex: number,
+  routeNumber: 1 | 2 | 3,
+  lanes: number,
+): WaveDefinition[] {
+  const { normal, fast, tank, flying, regen, shield, split } = roster;
+  const crowd = Math.floor((regionIndex + gymIndex) / 3);
+  const health = 0.57 + routeNumber * 0.09 + regionIndex * 0.035 + gymIndex * 0.016;
+  const speed = 0.85 + routeNumber * 0.035 + regionIndex * 0.02 + gymIndex * 0.006;
+
+  if (routeNumber === 1) {
+    return approachWaves([
+      [group(normal, 5 + crowd, 1.16)],
+      [group(fast, 6 + crowd, 0.92)],
+      [group(normal, 5, 1.04), group(signature, 3, 1.12, 4.6)],
+      [group(tank, 2 + crowd, 1.62), group(fast, 5, 0.88, 4.7)],
+    ], lanes, health, speed);
+  }
+  if (routeNumber === 2) {
+    return approachWaves([
+      [group(fast, 6 + crowd, 0.91)],
+      [group(flying, 4 + crowd, 1.02), group(normal, 4, 0.98, 3.8)],
+      [group(regen, 4 + crowd, 1.14), group(fast, 5, 0.86, 4.5)],
+      [group(tank, 3, 1.52), group(signature, 5 + crowd, 0.9, 4.6)],
+      [group(flying, 5 + crowd, 0.94), group(regen, 5, 1.06, 4.9)],
+    ], lanes, health, speed);
+  }
+  return approachWaves([
+    [group(normal, 5 + crowd, 1), group(signature, 3, 1.17, 3.8)],
+    [group(tank, 3 + crowd, 1.48), group(fast, 5, 0.79, 4.8)],
+    [group(shield, 4 + crowd, 1.1), group(flying, 4, 0.98, 4.5)],
+    [group(split, 3 + Math.floor(crowd / 2), 1.14), group(regen, 4, 1.06, 5.3)],
+    [group(fast, 7 + crowd, 0.76), group(signature, 5, 0.93, 5)],
+    [group(tank, 2 + crowd, 1.32), group(shield, 3, 1.03, 4.8), group(normal, 4, 0.94, 7.5)],
+  ], lanes, health, speed);
+}
+
+export function makeGymQualifierWaves(
+  roster: RegionalEnemies, signature: string, regionIndex: number, gymIndex: number, lanes: number,
+): WaveDefinition[] {
+  const { normal, fast, tank, flying, regen, shield, split, stealth } = roster;
+  const crowd = Math.floor((regionIndex + gymIndex) / 3);
+  const rounds = [
+    [group(normal, 6 + crowd, 1.03), group(signature, 3, 1.05, 4.5)],
+    [group(fast, 7 + crowd, 0.78), group(tank, 3, 1.43, 4.6)],
+    [group(flying, 4 + crowd, 0.97), group(signature, 6, 0.94, 4.8)],
+    [group(regen, 5 + crowd, 1.05), group(shield, 4, 1.08, 4.9)],
+    [group(split, 5 + crowd, 1.03), group(fast, 5, 0.84, 4.9)],
+  ];
+  if (gymIndex >= 4) {
+    rounds.push([group(tank, 4 + crowd, 1.28), group(stealth, 4, 1.12, 4.9)]);
+  }
+  rounds.push([group(signature, 7 + crowd, 0.83), group(shield, 5, 1.03, 5), group(flying, 4, 1, 8)]);
+
+  return approachWaves(
+    rounds, lanes, 0.9 + regionIndex * 0.055 + gymIndex * 0.023, 0.95 + regionIndex * 0.024 + gymIndex * 0.008,
+  );
+}
+
 export function makeGymWaves(
   roster: RegionalEnemies,
   signature: string,

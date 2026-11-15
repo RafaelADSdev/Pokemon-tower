@@ -11,10 +11,10 @@ function nationalDexNumber(model: string | null | undefined) {
   return Number(model?.match(/\/regular\/(\d+)\.glb$/)?.[1]);
 }
 
-test('defines eight ordered gyms in each region and one final expedition', () => {
+test('defines eight ordered gym journeys in each region and one final expedition', () => {
   expect(campaignRegions.map(({ id }) => id)).toEqual(Object.keys(dexRanges));
-  expect(campaignExpeditions).toHaveLength(25);
-  expect(new Set(campaignExpeditions.map(({ id }) => id)).size).toBe(25);
+  expect(campaignExpeditions).toHaveLength(121);
+  expect(new Set(campaignExpeditions.map(({ id }) => id)).size).toBe(121);
   expect(campaignExpeditions.at(-1)).toBe(finalTournament);
   expect(getCampaignExpedition('missing-gym')).toBeUndefined();
 
@@ -24,27 +24,47 @@ test('defines eight ordered gyms in each region and one final expedition', () =>
     expect(regionalGyms.map(({ order }) => order)).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
     expect(new Set(regionalGyms.map(({ badge }) => badge)).size).toBe(8);
   }
+  expect(campaignExpeditions.slice(0, -1)).toEqual(
+    campaignRegions.flatMap(({ gyms }) => gyms.flatMap((gym) => [...gym.routes, gym.qualifier, gym])),
+  );
 
   for (const expedition of campaignExpeditions) {
     expect(getCampaignExpedition(expedition.id)).toBe(expedition);
   }
 });
 
-test('each gym uses region-native Pokémon and valid wave routes', () => {
+test('each gym journey has three distinct routes, a qualifier and a harder leader battle', () => {
   for (const gym of gyms) {
-    const [first, last] = dexRanges[gym.regionId];
-    const lineup = new Set(gym.waves.flatMap(({ groups }) => groups.map(({ enemyId }) => enemyId)));
+    expect(gym.routes.map(({ routeNumber }) => routeNumber), gym.id).toEqual([1, 2, 3]);
+    expect(gym.routes.map(({ waves }) => waves.length), gym.id).toEqual([4, 5, 6]);
+    expect(new Set(gym.routes.map(({ map }) => map.id)).size, gym.id).toBe(3);
+    expect(gym.routes.map(({ id }) => id)).toEqual([1, 2, 3].map((number) => `${gym.id}-route-${number}`));
+    expect(gym.qualifier.id).toBe(`${gym.id}-qualifier`);
+    expect(gym.qualifier.waves.length, gym.id).toBeGreaterThanOrEqual(6);
     expect(gym.waves.length, gym.id).toBeGreaterThanOrEqual(8);
+    const journey = [...gym.routes, gym.qualifier, gym];
+    const loads = journey.map(({ waves }) => waves.reduce((total, wave) => total + waveHealth(wave), 0));
+    expect(loads, gym.id).toEqual([...loads].sort((a, b) => a - b));
+    for (const stage of journey.slice(0, -1)) {
+      expect(stage, stage.id).toMatchObject({ regionId: gym.regionId, order: gym.order, gymId: gym.id });
+    }
+  }
+});
 
-    for (const { groups } of gym.waves) {
-      expect(groups.length, gym.id).toBeGreaterThan(0);
+test('each regional battle uses native Pokémon and valid wave routes', () => {
+  for (const expedition of campaignExpeditions) {
+    if (expedition.kind === 'tournament') continue;
+    const [first, last] = dexRanges[expedition.regionId];
+    const lineup = new Set(expedition.waves.flatMap(({ groups }) => groups.map(({ enemyId }) => enemyId)));
+    for (const { groups } of expedition.waves) {
+      expect(groups.length, expedition.id).toBeGreaterThan(0);
       for (const group of groups) {
-        const context = `${gym.id} / ${group.enemyId}`;
+        const context = `${expedition.id} / ${group.enemyId}`;
         expect(Number.isInteger(group.count), context).toBe(true);
         expect(group.count, context).toBeGreaterThan(0);
         expect(group.delay, context).toBeGreaterThanOrEqual(0);
         expect(group.interval, context).toBeGreaterThanOrEqual(0);
-        if (group.pathIndex !== undefined) expect(gym.map.paths[group.pathIndex], context).toBeDefined();
+        if (group.pathIndex !== undefined) expect(expedition.map.paths[group.pathIndex], context).toBeDefined();
 
         const dex = nationalDexNumber(enemyById[group.enemyId]?.model);
         expect(dex, context).toBeGreaterThanOrEqual(first);
@@ -58,9 +78,9 @@ test('each gym uses region-native Pokémon and valid wave routes', () => {
       }
     }
 
-    expect(gym.featuredEnemies.length, gym.id).toBeGreaterThan(0);
-    expect(gym.featuredEnemies.every((enemyId) => lineup.has(enemyId)), gym.id).toBe(true);
-    expect(new Set(gym.map.slots.map(({ id }) => id)).size, gym.id).toBe(gym.map.slots.length);
+    expect(expedition.featuredEnemies.length, expedition.id).toBeGreaterThan(0);
+    expect(expedition.featuredEnemies.every((enemyId) => lineup.has(enemyId)), expedition.id).toBe(true);
+    expect(new Set(expedition.map.slots.map(({ id }) => id)).size, expedition.id).toBe(expedition.map.slots.length);
   }
 });
 
