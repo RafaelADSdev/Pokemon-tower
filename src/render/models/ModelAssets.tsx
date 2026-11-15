@@ -1,16 +1,16 @@
-import { Suspense, useEffect, type ReactNode } from "react";
-import { Clone, useGLTF } from "@react-three/drei";
-import { Mesh, type BufferGeometry, type Matrix4, type Material, type Object3D } from "three";
+import { Suspense, useEffect, useMemo, type ReactNode } from "react";
+import { useAnimations, useGLTF } from "@react-three/drei";
+import { Mesh, type AnimationClip, type Group, type Matrix4, type Object3D } from "three";
 import { useStore } from "zustand";
 import { enemyById } from "@/data/enemies";
 import type { WaveDefinition } from "@/data/waves/types";
 import type { GameRuntime } from "@/game/runtime";
 import { RenderBoundary } from "../RenderBoundary";
 import { modelNodeByPath } from "./generatedNodes";
+import { fitEnemyModel, prepareTowerModel, type ModelPart } from "./modelFit";
 
 export interface InstancedAsset {
-  geometry: BufferGeometry;
-  material?: Material | Material[];
+  parts: readonly ModelPart[];
   localTransform?: Matrix4;
 }
 
@@ -35,7 +35,7 @@ export function ModelWarmup({ runtime }: { runtime: GameRuntime }) {
     const warm = () => {
       for (const id of upcoming) {
         const path = enemyById[id]?.model;
-        if (path) useGLTF.preload(path, false, true);
+        if (path) useGLTF.preload(path);
       }
     };
     if (typeof window.requestIdleCallback === "function") {
@@ -56,14 +56,50 @@ export function LoadingModel({ children, fallback }: { children: ReactNode; fall
   );
 }
 
-export function TowerAsset({ path }: { path: string }) {
-  const { nodes, scene } = useGLTF(path, false, true);
+function FittedTower({ scene, clips, idlePose, reducedMotion, paused }: {
+  scene: Group;
+  clips: AnimationClip[];
+  idlePose?: string;
+  reducedMotion: boolean;
+  paused: boolean;
+}) {
+  const fixedPose = idlePose ? clips.find(({ name }) => name === idlePose) : undefined;
+  const { model, offset, scale } = useMemo(() => prepareTowerModel(scene, fixedPose), [scene, fixedPose]);
+  const idleClips = useMemo(() => {
+    const idle = reducedMotion || fixedPose ? undefined : clips.find(({ name }) => /idle/i.test(name));
+    return idle ? [idle] : [];
+  }, [clips, fixedPose, reducedMotion]);
+  const { actions } = useAnimations(idleClips, model);
+  const clipName = idleClips[0]?.name;
+
+  useEffect(() => {
+    if (!clipName) return;
+    const action = actions[clipName];
+    if (!action) return;
+    action.play();
+    action.getMixer().update(0);
+    return () => { action.stop(); };
+  }, [actions, clipName]);
+
+  useEffect(() => {
+    if (clipName) actions[clipName]?.setEffectiveTimeScale(paused ? 0 : 1);
+  }, [actions, clipName, paused]);
+
+  return (
+    <group position={offset} scale={scale}>
+      <primitive object={model} />
+    </group>
+  );
+}
+
+export function TowerAsset({ path, idlePose, reducedMotion, paused }: { path: string; idlePose?: string; reducedMotion: boolean; paused: boolean }) {
+  const { nodes, scene, animations } = useGLTF(path);
   const model = generatedMesh(path, nodes);
   if (model) {
     model.updateWorldMatrix(true, false);
     return <mesh geometry={model.geometry} material={model.material} matrix={model.matrixWorld} matrixAutoUpdate={false} castShadow />;
   }
-  return <Clone object={scene} castShadow dispose={null} />;
+  return <FittedTower scene={scene} clips={animations} idlePose={idlePose} reducedMotion={reducedMotion} paused={paused} />;
 }
 
 function generatedMesh(path: string, nodes: Record<string, Object3D>) {
@@ -73,10 +109,11 @@ function generatedMesh(path: string, nodes: Record<string, Object3D>) {
 }
 
 export function useInstancedAsset(path: string): InstancedAsset {
-  const { nodes } = useGLTF(path, false, true);
-  // Enemy GLBs have one vertex-colored mesh, so each species uses one batch.
-  const model = generatedMesh(path, nodes) ?? Object.values(nodes).find((node): node is Mesh => node instanceof Mesh);
-  if (!model) throw new Error(`No instanced mesh in ${path}`);
-  model.updateWorldMatrix(true, false);
-  return { geometry: model.geometry, material: model.material, localTransform: model.matrixWorld };
+  const { nodes, scene } = useGLTF(path);
+  return useMemo(() => {
+    const model = generatedMesh(path, nodes);
+    if (!model) return { parts: fitEnemyModel(scene) };
+    model.updateWorldMatrix(true, false);
+    return { parts: [{ geometry: model.geometry, material: model.material }], localTransform: model.matrixWorld };
+  }, [path, nodes, scene]);
 }

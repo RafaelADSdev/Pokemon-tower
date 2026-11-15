@@ -1,7 +1,7 @@
 export const brand = {
   name: 'Critter Defense',
-  creature: 'Criatura',
-  creatures: 'Criaturas',
-  creaturesEn: 'Creatures',
-  description: 'Defenda o caminho com criaturas elementais em um tower defense 3D.',
+  creature: 'Pokémon',
+  creatures: 'Pokémon',
+  creaturesEn: 'Pokémon',
+  description: 'Defenda o caminho com Pokémon em um tower defense 3D de fã.',
 } as const;

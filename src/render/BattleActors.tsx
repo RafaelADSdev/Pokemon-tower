@@ -25,7 +25,7 @@ export default function BattleActors({ runtime, alpha, selectedSlot, onSelectEne
       <ModelWarmup runtime={runtime} />
       <Enemies runtime={runtime} alpha={alpha} reducedMotion={reducedMotion} onSelectEnemy={onSelectEnemy} />
       <Projectiles runtime={runtime} alpha={alpha} />
-      <Towers runtime={runtime} selectedSlot={selectedSlot} />
+      <Towers runtime={runtime} selectedSlot={selectedSlot} reducedMotion={reducedMotion} />
       <Effects runtime={runtime} compact={!highEffects} reducedMotion={reducedMotion} />
       {highEffects && !reducedMotion && (
         <RenderBoundary fallback={null}>

@@ -1,6 +1,6 @@
 # Critter Defense
 
-Tower defense 3D de criaturas elementais para navegador. Três expedições de 30 ondas, oito criaturas jogáveis com evolução, dez inimigos e uma coleção que guarda os desbloqueios neste navegador.
+Tower defense 3D de fã para navegador. Três expedições de 30 ondas, oito Pokémon jogáveis com evolução, dez espécies inimigas e uma coleção que guarda os desbloqueios neste navegador.
 
 ## Rodar localmente
 
@@ -12,6 +12,8 @@ pnpm dev
 ```
 
 Abra [Critter Defense local](http://localhost:3000). Para testar a versão de produção, rode `pnpm build` e `pnpm start`.
+
+O navegador carrega os modelos 3D conforme a partida precisa deles. As malhas provisórias do jogo permitem jogar enquanto os GLBs estão em trânsito ou quando o serviço de modelos está indisponível. [Pokémon 3D API Assets](https://github.com/Pokemon-3D-api/assets)
 
 ## Jogar
 
@@ -31,7 +33,7 @@ Abra [Critter Defense local](http://localhost:3000). Para testar a versão de pr
 | Elementos e atributos globais | Edite as vantagens em `src/data/elements.ts`, os recursos e escalas em `src/data/rules.ts` e o empilhamento em `src/data/status.ts`. |
 | Mapa | Crie a definição em `src/data/maps/`. Escolha um bioma e preencha as dimensões da mesa, os caminhos `[x, z]`, as posições com IDs únicos e a paleta. Registre o ID em `src/data/maps/types.ts`, a definição em `src/data/maps/index.ts` e o conjunto de ondas em `src/data/waves/index.ts`. Adicione `public/images/map-<id>.webp` para o menu e `public/audio/<id>.mp3` para a trilha. |
 | Ondas | Edite `src/data/waves/<mapa>.ts`. A função `group` recebe ID do inimigo, quantidade, intervalo entre inimigos em segundos, atraso inicial opcional e índice opcional do caminho. As ondas são numeradas a partir de 1. |
-| Modelos e retratos | Coloque o `.glb` em `public/models/` e aponte `model` na criatura, evolução ou inimigo para `/models/arquivo.glb`. Para instanciar um inimigo, exporte um único mesh. Use um retrato `public/images/creatures/<id>.webp` para cada novo ID jogável. Registre a origem em `ASSETS.md`. |
+| Modelos e retratos | Use `pokemonAppearance(númeroDaPokédex, nome)` nos catálogos para resolver os GLBs da revisão fixada em `src/data/pokemon.ts`. Para um modelo local, coloque o arquivo em `public/models/` e aponte `model` para `/models/arquivo.glb`. Defina `portrait` para o retrato de cada torre. Registre a origem em `ASSETS.md`. |
 
 O pipeline `pnpm assets:models` recria os GLBs originais compactados e atualiza o catálogo tipado de nós. As licenças e a regeneração do áudio estão no [registro de assets](ASSETS.md).
 
@@ -46,6 +48,10 @@ pnpm build
 Os testes incluem uma vitória completa na onda 30 de cada mapa com as criaturas iniciais, além de bifurcação determinística, ondas sobrepostas, economia, efeitos, dano e progressão.
 
 ### Benchmark com 300 inimigos
+
+Na edição com Pokémon, a medição de 3 segundos com 300 inimigos ativos na RTX 5060 registrou 164 FPS de mediana no desktop e 82,6 FPS na emulação de Pixel 7 com CPU limitada em 4×. O p99 foi de 6,2 ms e 18,3 ms por quadro, respectivamente.
+
+As medições de simulação, tamanho inicial e Lighthouse abaixo registram a edição original.
 
 - `pnpm bench` mede os passos fixos com 300 inimigos e 11 torres evoluídas. Em um i5-14600KF com Node 24.21, a simulação registrou 0,026 ms de mediana e 0,093 ms no p95 após o aquecimento, em 2.400 passos.
 - Instale `playwright-core` em um diretório auxiliar e rode `node scripts/bench-browser.mjs <caminho-do-playwright-core> <executável-do-Chrome>`. Defina `CRITTER_MOBILE_CPU_THROTTLE=4` para repetir o perfil móvel com CPU limitada e `CRITTER_APP_URL` para medir a transferência de JavaScript do build em execução.

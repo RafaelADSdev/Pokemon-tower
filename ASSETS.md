@@ -8,14 +8,24 @@ Os modelos, as ilustrações, os cenários e o áudio originais de Critter Defen
 | Tabuleiros, trilhas, vegetação, cristais e formações vulcânicas 3D | Geometria original em [src/render](src/render), com paletas e layout em [src/data/maps](src/data/maps) | [CC0 1.0][cc0] |
 | `public/images/map-forest.webp`, `map-cave.webp`, `map-volcano.webp` | Capturas dos tabuleiros originais deste projeto | [CC0 1.0][cc0] |
 | `public/images/creatures/*.webp` | Oito retratos renderizados a partir dos GLBs originais | [CC0 1.0][cc0] |
-| `public/images/amber-wood.webp`, `amber-wood-mobile.webp`, `src/app/icon.png` | Ilustração original gerada com a ferramenta de imagens da OpenAI. As versões móvel e de ícone derivam da arte principal. [Registro da direção](DECISIONS.md) | [CC0 1.0][cc0] |
+| `public/images/amber-wood*.webp` e `public/images/amber-trail*.webp` | Ilustrações de cenário criadas com o ImageGen da OpenAI. [Prompts registrados](DECISIONS.md) | [CC0 1.0][cc0] |
+| GLBs remotos de Pokémon | [Pokémon 3D API Assets][pokemon-assets], revisão `429de1288cea0d43f5b4f56305d2276e94239d65` | Direitos dos respectivos titulares de Pokémon. [Aviso do fornecedor][pokemon-rights] |
+| `public/images/pokemon/*.webp` e `src/app/icon.png` | Retratos, poses de menu e ícone renderizados dos mesmos GLBs de Pokémon | Direitos dos respectivos titulares de Pokémon. [Aviso do fornecedor][pokemon-rights] |
 | `public/audio/forest.mp3`, `cave.mp3`, `volcano.mp3` | Três trilhas instrumentais originais para floresta, caverna e vulcão, compostas e sintetizadas por [scripts/generate-audio.py](scripts/generate-audio.py) | [CC0 1.0][cc0] |
 | `public/audio/{boss,death,defeat,impact,leak,pause,place,sell,shot,ui,upgrade,victory,wave}.mp3` | Treze efeitos originais sintetizados por [scripts/generate-audio.py](scripts/generate-audio.py) | [CC0 1.0][cc0] |
 | DM Serif Text | `@fontsource/dm-serif-text` com licença no pacote. [Fontsource][dm] | [SIL OFL 1.1][ofl] |
 | Instrument Sans variável | `@fontsource-variable/instrument-sans` com licença no pacote. [Fontsource][instrument] | [SIL OFL 1.1][ofl] |
 | Ícones de interface e glifos dos elementos | `lucide-react` com avisos de licença no pacote. [Lucide][lucide] | ISC, com MIT para ícones derivados de Feather |
 
-## Modelos GLB
+## Modelos GLB de Pokémon
+
+O jogo carrega individualmente os 26 GLBs otimizados do catálogo `models/opt/regular` pelo GitHub Raw. O catálogo do jogo associa as oito torres às suas formas iniciais e evoluídas e define dez espécies para as ondas. Os IDs internos do jogo continuam sendo usados nos arquivos de ondas e nas regras de desbloqueio. [Revisão usada][pokemon-assets]
+
+Os arquivos somam 1,81 MB e usam compressão Draco. Os limites observados são 6.346 triângulos por forma jogável e 2.908 por inimigo. As partes dos inimigos são instanciadas por malha para preservar suas texturas e materiais.
+
+O repositório informa que os modelos pertencem a Nintendo, Creatures Inc. e GAME FREAK inc. A licença MIT do projeto cobre código e documentação. [Créditos do repositório][pokemon-credits] · [Aviso de direitos autorais][pokemon-rights]
+
+## Modelos GLB originais
 
 - Criaturas com estágio inicial e evolução `-evolved` em GLB: `emberling`, `rivermutt`, `glimleaf`, `duskspore`, `cragbeak`, `runebell`, `voltwing` e `gildmole`.
 - Inimigos em GLB: `mossmite`, `reedrunner`, `flinthide`, `galefoal`, `springtail`, `cindershield`, `hollowpod`, `mistveil`, `marrowcrown` e `ashdrummer`.
@@ -32,3 +42,6 @@ As faixas são estéreo e têm aproximadamente 19, 23 e 17 segundos. O áudio co
 [ofl]: https://openfontlicense.org/open-font-license-official-text/
 [lucide]: https://lucide.dev/license
 [meshopt]: https://gltf-transform.dev/modules/functions/functions/meshopt
+[pokemon-assets]: https://github.com/Pokemon-3D-api/assets/tree/429de1288cea0d43f5b4f56305d2276e94239d65/models/opt/regular
+[pokemon-credits]: https://github.com/Pokemon-3D-api/assets#%EF%B8%8F-license--credits
+[pokemon-rights]: https://github.com/Pokemon-3D-api/api-server/blob/main/docs/COPYRIGHT.md

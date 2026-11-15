@@ -69,7 +69,7 @@ export function CreaturesPanel({ runtime, game, totalStars }: { runtime: GameRun
             <button type="button" className="recruit" key={creature.id} data-locked={locked} disabled={locked || !selectedSlot || !active || money < creature.cost}
               onClick={() => selectedSlot && runtime.placeTower(selectedSlot, creature.id)} title={describe(creature)}>
               <span className="recruit-emblem">
-                <Image src={`/images/creatures/${creature.id}.webp`} width={44} height={44} alt="" unoptimized />
+                <Image src={creature.portrait ?? `/images/creatures/${creature.id}.webp`} width={44} height={44} alt="" unoptimized />
                 <ElementGlyph element={creature.element} size={11} />
               </span>
               <span className="recruit-copy">

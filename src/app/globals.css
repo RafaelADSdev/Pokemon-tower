@@ -24,6 +24,9 @@ h1, h2, h3 { color: var(--paper); }
 .entry { position: relative; isolation: isolate; min-height: clamp(27rem, 42vw, 35rem); border-bottom: 1px solid #666044; background: #162017; padding: 3.5rem max(1.35rem, calc((100vw - 75rem) / 2)); overflow: hidden; }
 .entry-art { position: absolute; inset: 0; z-index: -2; }
 .entry-art img { object-fit: cover; object-position: 50% 43%; }
+.entry-pokemon { position: absolute; z-index: -2; height: auto; pointer-events: none; transform: translate(-50%, -94.5%); filter: drop-shadow(0 .65rem .36rem #201206a8); }
+.entry-charmander { left: 54.6%; top: calc(43% - 1.6vw); width: clamp(6rem, 13vw, 14rem); }
+.entry-pikachu { left: 81%; top: calc(43% + 15.4vw); width: clamp(9rem, 21vw, 23rem); }
 .entry::after { content: ''; position: absolute; z-index: -1; inset: 0; background: linear-gradient(90deg, #101910 0%, #101910e8 15%, #10191063 41%, transparent 64%), linear-gradient(0deg, #11181183, transparent 25%); }
 .entry-content { position: relative; max-width: 36rem; }
 .entry .section-kicker { display: flex; align-items: center; gap: .48rem; margin: 0 0 1.15rem; }
@@ -170,6 +173,8 @@ h1, h2, h3 { color: var(--paper); }
   .slot-tray button { min-width: 2.7rem; min-height: 2.7rem; }
   .entry { align-items: flex-end; min-height: clamp(30rem, 75dvh, 41rem); padding-bottom: 2rem; }
   .entry-art img { object-position: 57% 45%; }
+  .entry-charmander { display: none; }
+  .entry-pikachu { left: 64%; top: 50%; z-index: -1; width: clamp(9rem, 46vw, 15rem); }
   .entry::after { background: linear-gradient(0deg, #101810 0%, #101810ec 26%, #10181056 64%, #10181015 100%); }
   .entry h1 { font-size: clamp(3.55rem, 15vw, 5.4rem); }
   .entry-description { margin: 1rem 0 1.25rem; }

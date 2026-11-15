@@ -13,3 +13,13 @@
 ```text
 Use case: stylized-concept. Asset: wide landscape key art for an original web tower defense game, 3:2 full-bleed intended to crop horizontally. Handmade low-poly isometric woodland diorama with the detail and lighting of a miniature photographed on a dark stage. The RIGHT two thirds carry the subject: an S-shaped ochre trail on a moss-covered floating slice of rocky earth, angular conifers framing it, warm amber crystal gate, and a few stone octagonal tower pads. On the nearer right pad an original small faceted terracotta ember creature, like a round ceramic stove sprite with a small black face mask with tiny pale eyes and one amber flame shard as a crest; tiny mint leaf lantern creature and a blue pebble river spirit farther down the trail, never based on any existing IP. Rich moss greens, spruce and olive shadows, golden lanterns, dusty bits of light, clean spatial hierarchy and tactile handmade surfaces. Long perspective scene viewed at a 40 degree angle from above. The LEFT 36 percent should be dark open forest green chiaroscuro with minimal detail to support actual HTML title overlay. Full bleed, shallow distant mist, refined videogame key art, crisp prominent miniature. No letters, words, typography, logo, UI, watermarks, collage panels, or known characters or franchise references.
 ```
+
+## Edição com Pokémon
+
+- Os catálogos usam nomes e modelos do Pokémon 3D API Assets. Os retratos e personagens do menu foram renderizados a partir dos GLBs desse catálogo. [Origem e licenças](ASSETS.md)
+- As famílias com três formas chegam à forma final no nível 3. Os elementos, habilidades e custos seguem o balanceamento do tower defense.
+- A arte de cenário foi editada com o ImageGen integrado para receber os retratos sem sobrepor as criaturas da ilustração anterior.
+
+```text
+Edit the supplied woodland diorama key art. Perform exactly three small removals: erase the orange creature with a crystal crest on the lower-right octagonal stone pad and restore the bare radial stone paving; erase the little yellow lantern creature with green leaves in the middle foreground and restore the uninterrupted trail edge, moss and foliage; erase the blue round creature by the waterfall and restore the falling water and stones. The brass lanterns attached to wooden posts remain part of the environment. The composition should read as an unoccupied original fantasy battlefield with empty pads, to receive separate interactive HTML-rendered characters later. Keep the dark, almost empty negative space on the left and the same forest, amber gateway, lighting, scene, viewpoint, and aspect ratio. No characters, lettering or additions.
+```

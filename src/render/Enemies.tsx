@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
-import { InstancedMesh, Object3D, Sphere, Vector3 } from "three";
+import { InstancedBufferAttribute, InstancedMesh, MeshBasicMaterial, MeshStandardMaterial, Object3D, Sphere, Vector3, type Group } from "three";
 import { useStore } from "zustand";
 import { enemies, type EnemyDefinition } from "@/data/enemies";
 import type { EnemyEntity } from "@/game/ecs/world";
@@ -18,22 +18,37 @@ interface EnemiesProps {
   onSelectEnemy?: (entity: EnemyEntity) => void;
 }
 
-function prepareEnemyMesh(mesh: InstancedMesh) {
+function prepareEnemyMesh(mesh: InstancedMesh, matrices: InstancedBufferAttribute) {
+  // All primitives of one instance use the same transform and selection index.
+  mesh.instanceMatrix = matrices;
   prepareInstances(mesh);
   // These matrices are replaced every frame and can move across the entire board.
   mesh.boundingSphere ??= new Sphere(new Vector3(), 96);
 }
 
+function makeMatrices() {
+  return new InstancedBufferAttribute(new Float32Array(drawCapacity * 16), 16);
+}
+
+function publishEnemyParts(group: Group, first: InstancedMesh, count: number) {
+  publishInstances(first, count);
+  for (let index = 1; index < group.children.length; index++) {
+    (group.children[index] as InstancedMesh).count = count;
+  }
+}
+
 type EnemyBatchProps = EnemiesProps & { definition: EnemyDefinition };
 
 function EnemyBatch({ definition, runtime, alpha, reducedMotion, onSelectEnemy, model }: EnemyBatchProps & { model: InstancedAsset }) {
-  const bodies = useRef<InstancedMesh>(null);
-  const shades = useRef<InstancedMesh>(null);
+  const bodies = useRef<Group>(null);
+  const shades = useRef<Group>(null);
   const ids = useRef<Int32Array | null>(null);
   const shadeIds = useRef<Int32Array | null>(null);
   const transform = useMemo(() => new Object3D(), []);
-  const { geometry, material, localTransform } = model;
+  const { parts, localTransform } = model;
   const { flying, boss, stealth } = definition.traits;
+  const bodyMatrices = useMemo(() => makeMatrices(), []);
+  const shadeMatrices = useMemo(() => stealth ? makeMatrices() : null, [stealth]);
 
   useEffect(() => {
     ids.current = new Int32Array(drawCapacity);
@@ -41,9 +56,11 @@ function EnemyBatch({ definition, runtime, alpha, reducedMotion, onSelectEnemy, 
   }, [stealth]);
 
   useFrame(() => {
-    const mesh = bodies.current;
-    if (!mesh || !ids.current) return;
-    const ethereal = shades.current;
+    const bodyGroup = bodies.current;
+    const shadeGroup = shades.current;
+    const mesh = bodyGroup?.children[0];
+    if (!bodyGroup || !(mesh instanceof InstancedMesh) || !ids.current) return;
+    const ethereal = shadeGroup?.children[0] as InstancedMesh | undefined;
     const lookup = ids.current;
     const shadeLookup = shadeIds.current;
     const entities = runtime.queries.enemies.entities;
@@ -77,8 +94,8 @@ function EnemyBatch({ definition, runtime, alpha, reducedMotion, onSelectEnemy, 
       }
     }
 
-    publishInstances(mesh, count);
-    if (ethereal) publishInstances(ethereal, shadesCount);
+    publishEnemyParts(bodyGroup, mesh, count);
+    if (shadeGroup && ethereal) publishEnemyParts(shadeGroup, ethereal, shadesCount);
   });
 
   function select(event: ThreeEvent<MouseEvent>, hidden: boolean) {
@@ -93,27 +110,41 @@ function EnemyBatch({ definition, runtime, alpha, reducedMotion, onSelectEnemy, 
 
   return (
     <group>
-      <instancedMesh
-        args={[geometry, material, drawCapacity]}
-        ref={bodies}
-        onUpdate={prepareEnemyMesh}
-        count={0}
-        frustumCulled={false}
-        onClick={onSelectEnemy ? (event) => select(event, false) : undefined}
-      >
-        {!material && <meshStandardMaterial vertexColors roughness={0.82} flatShading />}
-      </instancedMesh>
-      {stealth && (
-        <instancedMesh
-          args={[geometry, undefined, drawCapacity]}
-          ref={shades}
-          onUpdate={prepareEnemyMesh}
-          count={0}
-          frustumCulled={false}
-          onClick={onSelectEnemy ? (event) => select(event, true) : undefined}
-        >
-          <meshBasicMaterial vertexColors={Boolean(geometry.attributes.color)} transparent opacity={0.34} depthWrite={false} />
-        </instancedMesh>
+      <group ref={bodies}>
+        {parts.map(({ geometry, material }) => (
+          <instancedMesh
+            key={geometry.uuid}
+            args={[geometry, material, drawCapacity]}
+            onUpdate={(mesh) => prepareEnemyMesh(mesh, bodyMatrices)}
+            count={0}
+            frustumCulled={false}
+            onClick={onSelectEnemy ? (event) => select(event, false) : undefined}
+          >
+            {!material && <meshStandardMaterial vertexColors roughness={0.82} flatShading />}
+          </instancedMesh>
+        ))}
+      </group>
+      {shadeMatrices && (
+        <group ref={shades}>
+          {parts.map(({ geometry, material }) => (
+            <instancedMesh
+              key={geometry.uuid}
+              args={[geometry, undefined, drawCapacity]}
+              onUpdate={(mesh) => prepareEnemyMesh(mesh, shadeMatrices)}
+              count={0}
+              frustumCulled={false}
+              onClick={onSelectEnemy ? (event) => select(event, true) : undefined}
+            >
+              <meshBasicMaterial
+                map={material instanceof MeshStandardMaterial || material instanceof MeshBasicMaterial ? material.map : null}
+                vertexColors={Boolean(geometry.attributes.color)}
+                transparent
+                opacity={0.34}
+                depthWrite={false}
+              />
+            </instancedMesh>
+          ))}
+        </group>
       )}
     </group>
   );
@@ -123,7 +154,7 @@ function FallbackEnemyBatch(props: EnemyBatchProps) {
   const { definition } = props;
   const geometry = useMemo(() => sculpture(enemyPieces(definition.visual), definition.color), [definition]);
   useEffect(() => () => geometry.dispose(), [geometry]);
-  return <EnemyBatch {...props} model={{ geometry }} />;
+  return <EnemyBatch {...props} model={{ parts: [{ geometry }] }} />;
 }
 
 function LoadedEnemyBatch({ path, ...props }: EnemyBatchProps & { path: string }) {

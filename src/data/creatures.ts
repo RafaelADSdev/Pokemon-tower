@@ -1,4 +1,5 @@
 import type { ElementId } from "./elements";
+import { pokemonAppearance, pokemonPortrait } from "./pokemon";
 import type { StatusApplication } from "./status";
 
 export const creatureRoles = {
@@ -52,6 +53,7 @@ interface CreatureAppearance {
   readonly descriptionEn: string;
   readonly visual: string;
   readonly model: string | null;
+  readonly idlePose?: string;
 }
 
 export type CreatureEvolution = CreatureAppearance & CreatureAbilities;
@@ -59,6 +61,7 @@ export type CreatureLevelDefinition = CreatureStats & CreatureAbilities;
 
 export interface CreatureDefinition extends CreatureAppearance, CreatureAbilities, CreatureStats {
   readonly id: string;
+  readonly portrait?: string;
   readonly element: ElementId;
   readonly role: CreatureRole;
   readonly projectileSpeed: number;
@@ -70,8 +73,8 @@ export interface CreatureDefinition extends CreatureAppearance, CreatureAbilitie
 
 export const starterCreature: CreatureDefinition = {
   id: "emberling",
-  name: "Braseco",
-  nameEn: "Emberling",
+  ...pokemonAppearance(4, "Charmander"),
+  portrait: pokemonPortrait(4),
   description: "Dispara fagulhas rápidas contra um alvo por vez.",
   descriptionEn: "Fires a rapid volley of sparks at one target.",
   element: "brasa",
@@ -83,19 +86,16 @@ export const starterCreature: CreatureDefinition = {
   projectileSpeed: 12,
   color: "#ff8658",
   visual: "emberling",
-  model: "/models/emberling.glb",
   targets: "any",
   levels: [
     { cost: 110, damage: 29, range: 4.18, cooldown: 0.53 },
     { cost: 200, damage: 46, range: 4.5, cooldown: 0.46 },
   ],
   evolution: {
-    name: "Coroabrasa",
-    nameEn: "Embercrown",
+    ...pokemonAppearance(6, "Charizard"),
     description: "Cada fagulha deixa o alvo em chamas.",
     descriptionEn: "Each spark leaves its target burning.",
     visual: "emberling-evolved",
-    model: "/models/emberling-evolved.glb",
     status: { id: "burn", strength: 20, duration: 2.4 },
   },
 };
@@ -104,8 +104,8 @@ export const creatures: readonly CreatureDefinition[] = [
   starterCreature,
   {
     id: "rivermutt",
-    name: "Marulgo",
-    nameEn: "Rivermutt",
+    ...pokemonAppearance(7, "Squirtle"),
+    portrait: pokemonPortrait(7),
     description: "Lança bolhas que estouram e atingem inimigos próximos.",
     descriptionEn: "Lobs bubbles that burst and damage nearby enemies.",
     element: "mare",
@@ -117,7 +117,6 @@ export const creatures: readonly CreatureDefinition[] = [
     projectileSpeed: 9,
     color: "#72c8dc",
     visual: "rivermutt",
-    model: "/models/rivermutt.glb",
     targets: "ground",
     splash: 1.25,
     levels: [
@@ -125,20 +124,18 @@ export const creatures: readonly CreatureDefinition[] = [
       { cost: 235, damage: 99, range: 4.9, cooldown: 1.11 },
     ],
     evolution: {
-      name: "Marulgo Torrente",
-      nameEn: "Torrent Rivermutt",
+      ...pokemonAppearance(9, "Blastoise"),
       description: "Uma onda maior abranda tudo que atinge.",
       descriptionEn: "A larger burst slows every enemy it hits.",
       visual: "rivermutt-evolved",
-      model: "/models/rivermutt-evolved.glb",
       splash: 2.05,
       status: { id: "slow", strength: 0.3, duration: 1.5 },
     },
   },
   {
     id: "glimleaf",
-    name: "Verdevéu",
-    nameEn: "Glimleaf",
+    ...pokemonAppearance(1, "Bulbasaur"),
+    portrait: pokemonPortrait(1),
     description: "Espalha sementes que reduzem a velocidade dos alvos.",
     descriptionEn: "Scatters seeds that slow the enemies they hit.",
     element: "folha",
@@ -150,7 +147,6 @@ export const creatures: readonly CreatureDefinition[] = [
     projectileSpeed: 10,
     color: "#a9c872",
     visual: "glimleaf",
-    model: "/models/glimleaf.glb",
     targets: "any",
     status: { id: "slow", strength: 0.36, duration: 1.8 },
     levels: [
@@ -158,20 +154,18 @@ export const creatures: readonly CreatureDefinition[] = [
       { cost: 184, damage: 42, range: 4.75, cooldown: 0.62 },
     ],
     evolution: {
-      name: "Véu-Ancião",
-      nameEn: "Elder Glimleaf",
+      ...pokemonAppearance(3, "Venusaur"),
       description: "Espalha sementes em área e imobiliza brevemente os alvos.",
       descriptionEn: "Scatters seeds in an area and briefly stuns its targets.",
       visual: "glimleaf-evolved",
-      model: "/models/glimleaf-evolved.glb",
       splash: 1.35,
       status: { id: "stun", strength: 1, duration: 0.42 },
     },
   },
   {
     id: "duskspore",
-    name: "Esporim",
-    nameEn: "Duskspore",
+    ...pokemonAppearance(46, "Paras"),
+    portrait: pokemonPortrait(46),
     description: "Aplica veneno cumulativo que corrói inimigos resistentes.",
     descriptionEn: "Applies stacking poison to wear down resilient enemies.",
     element: "sombra",
@@ -183,7 +177,6 @@ export const creatures: readonly CreatureDefinition[] = [
     projectileSpeed: 10,
     color: "#c49de8",
     visual: "duskspore",
-    model: "/models/duskspore.glb",
     targets: "ground",
     status: { id: "poison", strength: 13, duration: 3.1 },
     levels: [
@@ -191,20 +184,18 @@ export const creatures: readonly CreatureDefinition[] = [
       { cost: 209, damage: 49, range: 4.8, cooldown: 0.62 },
     ],
     evolution: {
-      name: "Nuvem-Esporo",
-      nameEn: "Sporecloud",
+      ...pokemonAppearance(47, "Parasect"),
       description: "Espalha veneno forte em uma área ao redor do impacto.",
       descriptionEn: "Spreads a potent toxin around each point of impact.",
       visual: "duskspore-evolved",
-      model: "/models/duskspore-evolved.glb",
       splash: 1.2,
       status: { id: "poison", strength: 22, duration: 4.25 },
     },
   },
   {
     id: "cragbeak",
-    name: "Pedrabico",
-    nameEn: "Cragbeak",
+    ...pokemonAppearance(74, "Geodude"),
+    portrait: pokemonPortrait(74),
     description: "Dispara projéteis pesados de longe com uma cadência lenta.",
     descriptionEn: "Fires slow, powerful shots from a long distance.",
     element: "pedra",
@@ -216,26 +207,23 @@ export const creatures: readonly CreatureDefinition[] = [
     projectileSpeed: 22,
     color: "#c7a47c",
     visual: "cragbeak",
-    model: "/models/cragbeak.glb",
     targets: "any",
     levels: [
       { cost: 148, damage: 114, range: 7.0, cooldown: 1.86 },
       { cost: 252, damage: 179, range: 7.85, cooldown: 1.62 },
     ],
     evolution: {
-      name: "Bico-Monólito",
-      nameEn: "Monolith Beak",
+      ...pokemonAppearance(76, "Golem"),
       description: "Marca os alvos para que recebam mais dano de todas as fontes.",
       descriptionEn: "Marks targets to take more damage from every source.",
       visual: "cragbeak-evolved",
-      model: "/models/cragbeak-evolved.glb",
       status: { id: "mark", strength: 0.33, duration: 3.5 },
     },
   },
   {
     id: "runebell",
-    name: "Sino-Runa",
-    nameEn: "Runebell",
+    ...pokemonAppearance(436, "Bronzor"),
+    portrait: pokemonPortrait(436),
     description: "Amplia o dano e alcance de aliados próximos e revela furtivos.",
     descriptionEn: "Boosts damage and range of nearby allies and reveals hidden enemies.",
     element: "sombra",
@@ -247,7 +235,6 @@ export const creatures: readonly CreatureDefinition[] = [
     projectileSpeed: 0,
     color: "#baadf4",
     visual: "runebell",
-    model: "/models/runebell.glb",
     targets: "none",
     support: { radius: 4.45, damage: 0.22, range: 0.16, reveal: true },
     levels: [
@@ -261,19 +248,18 @@ export const creatures: readonly CreatureDefinition[] = [
       { cost: 198, damage: 0, range: 5.7, cooldown: 0 },
     ],
     evolution: {
-      name: "Runa Maior",
-      nameEn: "Grand Runebell",
+      ...pokemonAppearance(437, "Bronzong"),
       description: "Sua ressonância fortalece mais aliados em uma área maior.",
       descriptionEn: "Its resonance adds stronger bonuses across a larger area.",
       visual: "runebell-evolved",
-      model: "/models/runebell-evolved.glb",
       support: { radius: 5.7, damage: 0.49, range: 0.27, reveal: true },
     },
   },
   {
     id: "voltwing",
-    name: "Voltasa",
-    nameEn: "Voltwing",
+    ...pokemonAppearance(25, "Pikachu"),
+    portrait: pokemonPortrait(25),
+    idlePose: "Impactrueno",
     description: "Caça voadores com descargas de dano ampliado.",
     descriptionEn: "Hunts flying enemies with high-powered discharges.",
     element: "faisca",
@@ -285,7 +271,6 @@ export const creatures: readonly CreatureDefinition[] = [
     projectileSpeed: 18,
     color: "#f1d071",
     visual: "voltwing",
-    model: "/models/voltwing.glb",
     targets: "any",
     airMultiplier: 2.3,
     levels: [
@@ -293,22 +278,20 @@ export const creatures: readonly CreatureDefinition[] = [
       { cost: 212, damage: 55, range: 6.15, cooldown: 0.63 },
     ],
     evolution: {
-      name: "Asa-Trovão",
-      nameEn: "Thunderwing",
+      ...pokemonAppearance(26, "Raichu"),
       description: "Descargas mais fortes interrompem o movimento dos alvos.",
       descriptionEn: "Stronger discharges interrupt enemy movement.",
       visual: "voltwing-evolved",
-      model: "/models/voltwing-evolved.glb",
       airMultiplier: 2.9,
       status: { id: "stun", strength: 1, duration: 0.25 },
     },
   },
   {
     id: "gildmole",
-    name: "Ourofuça",
-    nameEn: "Gildmole",
-    description: "Escava moedas periodicamente enquanto uma onda está ativa.",
-    descriptionEn: "Digs up coins periodically while a wave is active.",
+    ...pokemonAppearance(52, "Meowth"),
+    portrait: pokemonPortrait(52),
+    description: "Gera moedas periodicamente com Dia de Pagamento enquanto uma onda está ativa.",
+    descriptionEn: "Generates coins with Pay Day while a wave is active.",
     element: "pedra",
     role: "income",
     cost: 135,
@@ -318,7 +301,6 @@ export const creatures: readonly CreatureDefinition[] = [
     projectileSpeed: 0,
     color: "#e2b154",
     visual: "gildmole",
-    model: "/models/gildmole.glb",
     targets: "none",
     income: { amount: 15, interval: 5.5 },
     levels: [
@@ -326,12 +308,10 @@ export const creatures: readonly CreatureDefinition[] = [
       { cost: 185, damage: 0, range: 0, cooldown: 0 },
     ],
     evolution: {
-      name: "Garimpaur",
-      nameEn: "Goldburrow",
-      description: "Encontra filões ricos de moedas com maior frequência.",
-      descriptionEn: "Finds richer veins of coins at shorter intervals.",
+      ...pokemonAppearance(53, "Persian"),
+      description: "Dia de Pagamento passa a gerar mais moedas em intervalos menores.",
+      descriptionEn: "Pay Day generates more coins at shorter intervals.",
       visual: "gildmole-evolved",
-      model: "/models/gildmole-evolved.glb",
       income: { amount: 42, interval: 4.5 },
     },
   },

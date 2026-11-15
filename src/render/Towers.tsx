@@ -35,7 +35,7 @@ function RangeOverlay({ reference, color }: { reference: React.RefObject<Group |
   );
 }
 
-function Tower({ entity, selected }: { entity: TowerEntity; selected: boolean }) {
+function Tower({ entity, selected, paused, reducedMotion }: { entity: TowerEntity; selected: boolean; paused: boolean; reducedMotion: boolean }) {
   const body = useRef<Group>(null);
   const range = useRef<Group>(null);
   const { tower, position } = entity;
@@ -73,7 +73,7 @@ function Tower({ entity, selected }: { entity: TowerEntity; selected: boolean })
       <group ref={body} scale={evolved ? 1.18 : level === 2 ? 1.075 : 1}>
         {appearance.model ? (
           <LoadingModel key={appearance.model} fallback={<TowerModel visual={appearance.visual} color={definition.color} />}>
-            <TowerAsset path={appearance.model} />
+            <TowerAsset path={appearance.model} idlePose={appearance.idlePose} paused={paused} reducedMotion={reducedMotion} />
           </LoadingModel>
         ) : <TowerModel visual={appearance.visual} color={definition.color} />}
       </group>
@@ -81,10 +81,11 @@ function Tower({ entity, selected }: { entity: TowerEntity; selected: boolean })
   );
 }
 
-export function Towers({ runtime, selectedSlot }: { runtime: GameRuntime; selectedSlot?: string | null }) {
+export function Towers({ runtime, selectedSlot, reducedMotion }: { runtime: GameRuntime; selectedSlot?: string | null; reducedMotion: boolean }) {
   const { entities } = useEntities(runtime.queries.towers);
   useStore(runtime.store, (state) => state.towerRevision);
+  const paused = useStore(runtime.store, (state) => state.paused);
   return entities.map((entity) => (
-    <Tower key={entity.id} entity={entity} selected={entity.tower.slotId === selectedSlot} />
+    <Tower key={entity.id} entity={entity} selected={entity.tower.slotId === selectedSlot} paused={paused} reducedMotion={reducedMotion} />
   ));
 }

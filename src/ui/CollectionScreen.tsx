@@ -32,7 +32,7 @@ export function CollectionScreen() {
             return (
               <article className="collection-card" data-locked={locked} key={creature.id}>
                 <div className="collection-portrait" style={{ '--element-color': elementById[creature.element].color } as React.CSSProperties}>
-                  <Image src={`/images/creatures/${creature.id}.webp`} width={150} height={150} alt="" unoptimized />
+                  <Image src={creature.portrait ?? `/images/creatures/${creature.id}.webp`} width={150} height={150} alt="" unoptimized />
                   {locked && <span className="locked-label"><LockKeyhole size={13} aria-hidden="true" /> {t.stars(required)}</span>}
                 </div>
                 <div className="collection-card-content">
