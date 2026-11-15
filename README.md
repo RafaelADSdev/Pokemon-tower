@@ -20,7 +20,7 @@ O navegador carrega os modelos 3D conforme a partida precisa deles. As malhas pr
 - Escolha uma região e desafie o primeiro ginásio. Cada vitória conquista a insígnia do ginásio e libera o próximo da mesma região. As três regiões podem ser iniciadas em qualquer ordem.
 - Selecione um espaço `+` no tabuleiro ou um botão de posição abaixo dele e implante um Pokémon com as moedas iniciais. A loja oferece oito famílias nativas da região em jogo.
 - Inicie a onda. As criaturas atacam automaticamente, e você recebe moedas por derrotar inimigos e concluir ondas. Você pode chamar a próxima enquanto a atual ainda está em andamento.
-- Selecione uma torre para melhorar, evoluir no nível 3, mudar a prioridade ou vender por 70% do total investido. A prévia da onda também permite inspecionar as fraquezas dos inimigos.
+- Selecione uma torre para melhorar, mudar a prioridade ou vender por 70% do total investido. Cada melhoria avança uma forma na cadeia evolutiva quando há outra forma no elenco. O nível 3 libera a habilidade final. A prévia da onda também permite inspecionar as fraquezas dos inimigos.
 - Arraste para mover a câmera. Use a roda do mouse ou o gesto de pinça para ajustar o zoom. No teclado, `N` chama a próxima onda, `Espaço` pausa ou retoma, `1` a `3` alteram a velocidade e `Esc` limpa a seleção.
 - Você ganha 1 estrela ao vencer, 2 com pelo menos 8 vidas e 3 com pelo menos 16 vidas. O melhor resultado de cada expedição conta para desbloquear Pokémon da Coleção. Insígnias e estrelas são guardadas no navegador.
 - Com as 24 insígnias, o Torneio Final reúne adversários das três regiões em 16 ondas numa arena de duas rotas.

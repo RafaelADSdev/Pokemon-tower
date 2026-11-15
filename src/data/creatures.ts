@@ -46,7 +46,7 @@ export interface CreatureAbilities {
   readonly airMultiplier?: number;
 }
 
-interface CreatureAppearance {
+export interface CreatureAppearance {
   readonly name: string;
   readonly nameEn: string;
   readonly description: string;
@@ -68,10 +68,23 @@ export interface CreatureDefinition extends CreatureAppearance, CreatureAbilitie
   readonly color: string;
   readonly targets: NonNullable<CreatureAbilities["targets"]>;
   readonly levels: readonly [CreatureLevelDefinition, CreatureLevelDefinition];
+  readonly intermediate?: CreatureAppearance;
   readonly evolution: CreatureEvolution;
 }
 
-export const starterCreature: CreatureDefinition = {
+export function withIntermediateAppearance(definition: CreatureDefinition, dex: number, name: string): CreatureDefinition {
+  return {
+    ...definition,
+    intermediate: {
+      ...pokemonAppearance(dex, name),
+      description: definition.description,
+      descriptionEn: definition.descriptionEn,
+      visual: definition.visual,
+    },
+  };
+}
+
+export const starterCreature = withIntermediateAppearance({
   id: "emberling",
   ...pokemonAppearance(4, "Charmander"),
   portrait: pokemonPortrait(4),
@@ -98,11 +111,11 @@ export const starterCreature: CreatureDefinition = {
     visual: "emberling-evolved",
     status: { id: "burn", strength: 20, duration: 2.4 },
   },
-};
+}, 5, "Charmeleon");
 
 export const creatures: readonly CreatureDefinition[] = [
   starterCreature,
-  {
+  withIntermediateAppearance({
     id: "rivermutt",
     ...pokemonAppearance(7, "Squirtle"),
     portrait: pokemonPortrait(7),
@@ -131,8 +144,8 @@ export const creatures: readonly CreatureDefinition[] = [
       splash: 2.05,
       status: { id: "slow", strength: 0.3, duration: 1.5 },
     },
-  },
-  {
+  }, 8, "Wartortle"),
+  withIntermediateAppearance({
     id: "glimleaf",
     ...pokemonAppearance(1, "Bulbasaur"),
     portrait: pokemonPortrait(1),
@@ -161,7 +174,7 @@ export const creatures: readonly CreatureDefinition[] = [
       splash: 1.35,
       status: { id: "stun", strength: 1, duration: 0.42 },
     },
-  },
+  }, 2, "Ivysaur"),
   {
     id: "duskspore",
     ...pokemonAppearance(46, "Paras"),
@@ -192,7 +205,7 @@ export const creatures: readonly CreatureDefinition[] = [
       status: { id: "poison", strength: 22, duration: 4.25 },
     },
   },
-  {
+  withIntermediateAppearance({
     id: "cragbeak",
     ...pokemonAppearance(74, "Geodude"),
     portrait: pokemonPortrait(74),
@@ -219,7 +232,7 @@ export const creatures: readonly CreatureDefinition[] = [
       visual: "cragbeak-evolved",
       status: { id: "mark", strength: 0.33, duration: 3.5 },
     },
-  },
+  }, 75, "Graveler"),
   {
     id: "runebell",
     ...pokemonAppearance(436, "Bronzor"),
@@ -322,4 +335,14 @@ export const creatureById: Readonly<Partial<Record<string, CreatureDefinition>>>
 
 export function getCreatureStats(definition: CreatureDefinition, level: CreatureLevel): CreatureLevelDefinition {
   return level === 1 ? definition : definition.levels[level - 2];
+}
+
+export function getCreatureAppearance(definition: CreatureDefinition, level: CreatureLevel): CreatureAppearance {
+  if (level === 1) return definition;
+  if (level === 3) return definition.evolution;
+  return definition.intermediate ?? {
+    ...definition.evolution,
+    description: definition.description,
+    descriptionEn: definition.descriptionEn,
+  };
 }

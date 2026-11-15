@@ -19,7 +19,7 @@ Use case: stylized-concept. Asset: wide landscape key art for an original web to
 ## Edição com Pokémon
 
 - Os catálogos usam nomes e modelos do Pokémon 3D API Assets. Os retratos e personagens do menu foram renderizados a partir dos GLBs desse catálogo. [Origem e licenças](ASSETS.md)
-- As famílias com três formas chegam à forma final no nível 3. Os elementos, habilidades e custos seguem o balanceamento do tower defense.
+- Em famílias com três formas, o nível 2 exibe a forma intermediária e o nível 3 exibe a forma final. Famílias com duas formas disponíveis evoluem no nível 2 e ganham a habilidade final no nível 3. Os elementos, habilidades e custos seguem o balanceamento do tower defense.
 - A arte de cenário foi editada com o ImageGen integrado para receber os retratos sem sobrepor as criaturas da ilustração anterior.
 
 ```text

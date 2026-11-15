@@ -1,6 +1,6 @@
 import { ArrowUp, Coins, Crosshair, LockKeyhole, Sprout } from 'lucide-react';
 import Image from 'next/image';
-import { creatureRoles, targetPriorities, type TargetPriority } from '@/data/creatures';
+import { creatureRoles, getCreatureAppearance, getCreatureStats, targetPriorities, type TargetPriority } from '@/data/creatures';
 import { getCreatureUnlockStars } from '@/data/progression';
 import { gameRules } from '@/data/rules';
 import type { GameRuntime } from '@/game/runtime';
@@ -17,9 +17,14 @@ export function CreaturesPanel({ runtime, game, totalStars }: { runtime: GameRun
   const position = selectedSlot?.toUpperCase();
 
   if (selectedSlot && tower) {
-    const { definition, level, evolved, priority, totalSpent, stats } = tower;
-    const nextLevel = definition.levels[level - 1];
-    const display = evolved ? definition.evolution : definition;
+    const { definition, level, priority, totalSpent, stats } = tower;
+    const display = getCreatureAppearance(definition, level);
+    const nextLevel = level === 1 ? 2 : level === 2 ? 3 : undefined;
+    const nextStats = nextLevel && getCreatureStats(definition, nextLevel);
+    const nextAppearance = nextLevel && getCreatureAppearance(definition, nextLevel);
+    const upgradeLabel = nextAppearance && nextAppearance.name !== display.name
+      ? t.evolveInto(localized(nextAppearance))
+      : t.upgrade;
     const number = new Intl.NumberFormat(language, { maximumFractionDigits: 2 });
     return (
       <section className="battle-panel creature-panel" aria-labelledby="tower-title">
@@ -50,7 +55,7 @@ export function CreaturesPanel({ runtime, game, totalStars }: { runtime: GameRun
           </label>
         )}
         <div className="tower-actions">
-          {nextLevel && <button type="button" className="gold-button" disabled={!active || money < nextLevel.cost} onClick={() => runtime.upgradeTower(selectedSlot)}><ArrowUp size={15} aria-hidden="true" /> {level === 2 ? t.evolve : t.upgrade} · {nextLevel.cost}</button>}
+          {nextStats && <button type="button" className="gold-button" disabled={!active || money < nextStats.cost} onClick={() => runtime.upgradeTower(selectedSlot)}><ArrowUp size={15} aria-hidden="true" /> {upgradeLabel} · {nextStats.cost}</button>}
           <button type="button" className="quiet-button" disabled={!active} onClick={() => runtime.sellTower(selectedSlot)}>{t.sell} · {Math.floor(totalSpent * gameRules.sellRefund)}</button>
         </div>
       </section>

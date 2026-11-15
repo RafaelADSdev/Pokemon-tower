@@ -3,6 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEntities } from "miniplex-react";
 import { useStore } from "zustand";
 import { MathUtils, type Group } from "three";
+import { getCreatureAppearance } from "@/data/creatures";
 import type { TowerEntity } from "@/game/ecs/world";
 import type { GameRuntime } from "@/game/runtime";
 import { LoadingModel, TowerAsset } from "./models/ModelAssets";
@@ -40,7 +41,7 @@ function Tower({ entity, selected, paused, reducedMotion }: { entity: TowerEntit
   const range = useRef<Group>(null);
   const { tower, position } = entity;
   const { definition, evolved, level } = tower;
-  const appearance = evolved ? definition.evolution : definition;
+  const appearance = getCreatureAppearance(definition, level);
 
   useFrame((_, delta) => {
     const group = body.current;

@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { ArrowLeft, ArrowUpRight, Badge, BadgeCheck, LockKeyhole, Star } from 'lucide-react';
 import { useState } from 'react';
 import { campaignRegions } from '@/data/campaign';
-import { creatureRoles } from '@/data/creatures';
+import { creatureRoles, getCreatureAppearance } from '@/data/creatures';
 import { elementById } from '@/data/elements';
 import { getCreatureUnlockStars } from '@/data/progression';
 import { regionalRosters } from '@/data/regionalCreatures';
@@ -44,6 +44,8 @@ export function CollectionScreen() {
           {roster.map((creature) => {
             const required = getCreatureUnlockStars(creature.id);
             const locked = totalStars < required;
+            const levelTwo = getCreatureAppearance(creature, 2);
+            const levelThree = getCreatureAppearance(creature, 3);
             return (
               <article className="collection-card" data-locked={locked} key={creature.id}>
                 <div className="collection-portrait" style={{ '--element-color': elementById[creature.element].color } as React.CSSProperties}>
@@ -56,7 +58,14 @@ export function CollectionScreen() {
                   <p>{describe(creature)}</p>
                   <div className="evolution-preview">
                     <ArrowUpRight size={17} aria-hidden="true" />
-                    <div><span>{t.evolution}</span><strong>{localized(creature.evolution)}</strong><p>{describe(creature.evolution)}</p></div>
+                    <div>
+                      <span>{t.evolution}</span>
+                      <ol className="evolution-levels">
+                        <li><span>{t.level} 2</span><strong>{localized(levelTwo)}</strong></li>
+                        <li><span>{t.level} 3</span><strong>{levelThree.name === levelTwo.name ? t.finalAbility : localized(levelThree)}</strong></li>
+                      </ol>
+                      <p>{describe(levelThree)}</p>
+                    </div>
                   </div>
                 </div>
               </article>

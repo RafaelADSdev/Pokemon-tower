@@ -195,6 +195,8 @@ a.gym-card:hover { border-color: var(--gold); background: #24291d; }
 .evolution-preview > svg { flex: 0 0 auto; color: var(--gold); }
 .evolution-preview span { display: block; color: var(--muted); font-size: .65rem; }
 .evolution-preview strong { display: block; font-size: .82rem; color: var(--paper); margin: .12rem 0 .2rem; }
+.evolution-levels { display: flex; flex-wrap: wrap; gap: .32rem .68rem; margin: .42rem 0; }
+.evolution-levels li { flex: 1 0 auto; }
 @media (min-width: 900px) {
   .battle-layout { grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem); align-items: start; }
   .battle-aside { padding-top: 4.88rem; }
