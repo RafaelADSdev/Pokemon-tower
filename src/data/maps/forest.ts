@@ -1,0 +1,46 @@
+import type { MapDefinition } from "./types";
+
+export const forestMap: MapDefinition = {
+  id: "forest",
+  name: "Bosque de Âmbar",
+  size: { width: 20, depth: 12 },
+  paths: [
+    [
+      [-9.75, -3.15],
+      [-6.4, -3.15],
+      [-5.15, -1.9],
+      [-5.15, 1.8],
+      [-3.9, 3.05],
+      [-1.25, 3.05],
+      [0, 1.8],
+      [0, -2.65],
+      [1.25, -3.9],
+      [5.2, -3.9],
+      [6.45, -2.65],
+      [6.45, 1.75],
+      [7.7, 3],
+      [9.75, 3],
+    ],
+  ],
+  slots: [
+    { id: "a1", position: [-8.05, -1.1] },
+    { id: "a2", position: [-7.4, 2.15] },
+    { id: "a3", position: [-3.6, -3.65] },
+    { id: "a4", position: [-2.55, -0.6] },
+    { id: "a5", position: [-2.35, 4.86] },
+    { id: "a6", position: [2.15, -1.7] },
+    { id: "a7", position: [2.15, 1.1] },
+    { id: "a8", position: [4.8, -1.04] },
+    { id: "a9", position: [4.75, 2.5] },
+    { id: "a10", position: [8.15, -2] },
+    { id: "a11", position: [8.55, 0.6] },
+  ],
+  theme: {
+    biome: "forest",
+    terrain: "#38533a",
+    trail: "#ba9160",
+    edge: "#302c23",
+    accent: "#e6b36b",
+    atmosphere: "#101a18",
+  },
+};
