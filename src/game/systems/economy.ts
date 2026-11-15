@@ -31,4 +31,5 @@ export function economySystem(store: StoreApi<GameState>, delta: EconomyDelta, w
       status,
     });
   }
+  return status;
 }

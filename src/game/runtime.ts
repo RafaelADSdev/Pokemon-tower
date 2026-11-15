@@ -6,6 +6,7 @@ import { gameRules } from '@/data/rules';
 import { getMapWaves } from '@/data/waves';
 import type { WaveDefinition } from '@/data/waves/types';
 import { compilePath, samplePath } from '@/lib/pathing';
+import { createFeedback } from './ecs/effectPool';
 import { createProjectilePool } from './ecs/projectilePool';
 import { createGameWorld, createPosition, snapshotPosition, type EnemyEntity, type TargetPriority, type TowerEntity } from './ecs/world';
 import { createGameStore, type GameState } from './store/gameStore';
@@ -36,6 +37,7 @@ export interface RuntimeOptions {
 export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = {}) {
   const { world, queries } = createGameWorld();
   const pool = createProjectilePool(world);
+  const feedback = createFeedback(world, queries.effects);
   const clock = createGameClock();
   const store = options.store ?? createGameStore();
   const definitions = options.waves ?? getMapWaves(map.id);
@@ -102,20 +104,21 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
   }
 
   function step(delta: number) {
+    feedback.advance(delta);
     if (!activeWaves.length) return;
     for (const wave of activeWaves) waveSystem(wave, delta, spawnEnemy);
 
     const enemies = queries.enemies.entities;
     const towers = queries.towers.entities;
     statusSystem(enemies, delta);
-    abilitySystem(enemies, delta);
+    abilitySystem(enemies, feedback, delta);
     movementSystem(enemies, delta);
     revealSystem(towers, enemies);
     targetingSystem(towers, enemies, delta);
-    combatSystem(towers, pool);
-    projectileSystem(queries.projectiles.entities, enemies, pool, delta);
+    combatSystem(towers, pool, feedback);
+    projectileSystem(queries.projectiles.entities, enemies, pool, feedback, delta);
     const { selectedEnemyId, lives } = store.getState();
-    cleanupSystem(enemies, world, economy, selectedEnemyId, splitEnemy);
+    cleanupSystem(enemies, world, economy, feedback, selectedEnemyId, splitEnemy);
     economy.reward += incomeSystem(towers, delta);
 
     let completed = 0;
@@ -130,17 +133,20 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
 
     if (lives <= economy.livesLost) activeWaves.length = 0;
     if (!activeWaves.length) clearProjectiles();
-    economySystem(store, economy, activeWaves.length, completed);
+    const status = economySystem(store, economy, activeWaves.length, completed);
+    if (status === 'victory' || status === 'defeat') feedback.queue(status);
   }
 
   return {
     store,
     queries,
     waves: definitions,
+    subscribeAudio: feedback.subscribe,
     advance(deltaSeconds: number) {
-      if (!activeWaves.length) return alpha;
+      if (!activeWaves.length && !queries.effects.entities.length) return alpha;
       const { speed, paused } = store.getState();
       alpha = clock.advance(deltaSeconds, speed, paused, step);
+      feedback.flush();
       return alpha;
     },
 
@@ -157,6 +163,7 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
       }
       activeWaves.push(createWave(definition));
       store.setState({ status: 'running', wave: wave + 1, wavesActive: activeWaves.length });
+      feedback.emit('wave');
       return true;
     },
 
@@ -186,6 +193,7 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
         occupiedSlots: { ...occupiedSlots, [slotId]: definition.id },
         towerRevision: towerRevision + 1,
       });
+      feedback.emit('place');
       return true;
     },
 
@@ -213,6 +221,7 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
       tower.totalSpent += cost;
       updateTowerBuffs(queries.towers.entities);
       store.setState({ money: money - cost, towerRevision: towerRevision + 1 });
+      feedback.emit('upgrade');
       return true;
     },
 
@@ -231,6 +240,7 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
         towerRevision: towerRevision + 1,
         money: money + Math.floor(entity.tower.totalSpent * gameRules.sellRefund),
       });
+      feedback.emit('sell');
       return true;
     },
 
@@ -253,6 +263,8 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
       random = seed;
       clock.reset();
       clearProjectiles();
+      feedback.clear();
+      feedback.clearCues();
       world.clear();
       store.getState().reset(definitions.length);
     },

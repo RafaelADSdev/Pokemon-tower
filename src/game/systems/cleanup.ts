@@ -1,4 +1,5 @@
 import type { World } from 'miniplex';
+import type { GameFeedback } from '../ecs/effectPool';
 import type { EnemyEntity, GameEntity } from '../ecs/world';
 
 export interface EconomyDelta {
@@ -8,7 +9,7 @@ export interface EconomyDelta {
 }
 
 export function cleanupSystem(
-  enemies: readonly EnemyEntity[], world: World<GameEntity>, economy: EconomyDelta,
+  enemies: readonly EnemyEntity[], world: World<GameEntity>, economy: EconomyDelta, feedback: GameFeedback,
   selectedEnemyId: number | null, splitEnemy: (parent: EnemyEntity) => void,
 ) {
   economy.reward = 0;
@@ -23,6 +24,9 @@ export function cleanupSystem(
     else if (enemy.health <= 0) economy.reward += enemy.definition.reward;
     else continue;
 
+    const kind = enemy.escaped ? 'leak' : 'death';
+    feedback.spawn(kind, entity.position, enemy.definition.color, enemy.definition.leakDamage);
+    feedback.queue(kind);
     if (entity.id === selectedEnemyId) economy.selectedEnemyGone = true;
     enemy.wave.alive--;
     world.remove(entity);

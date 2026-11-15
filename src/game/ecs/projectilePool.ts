@@ -18,7 +18,7 @@ export function createProjectilePool(world: World<GameEntity>) {
   return {
     fire(tower: TowerEntity, target: EnemyEntity) {
       const entity = available.pop();
-      if (!entity) return false;
+      if (!entity) return null;
 
       const { position, projectile } = entity;
       const { definition } = tower.tower;
@@ -36,7 +36,7 @@ export function createProjectilePool(world: World<GameEntity>) {
       projectile.status = tower.tower.stats.status;
       projectile.airMultiplier = tower.tower.stats.airMultiplier;
       world.add(entity);
-      return true;
+      return entity;
     },
 
     release(entity: ProjectileEntity) {

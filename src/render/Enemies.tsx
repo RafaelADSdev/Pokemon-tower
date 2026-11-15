@@ -6,12 +6,14 @@ import type { EnemyEntity } from "@/game/ecs/world";
 import type { GameRuntime } from "@/game/runtime";
 import { EnemyIndicators } from "./EnemyIndicators";
 import { drawCapacity, interpolatePosition, prepareInstances, publishInstances } from "./instances";
+import { LoadingModel, useInstancedAsset, type InstancedAsset } from "./models/ModelAssets";
 import { enemyPieces } from "./models/enemySculptures";
 import { sculpture } from "./models/sculpture";
 
 interface EnemiesProps {
   runtime: GameRuntime;
   alpha: RefObject<number>;
+  reducedMotion: boolean;
   onSelectEnemy?: (entity: EnemyEntity) => void;
 }
 
@@ -21,20 +23,21 @@ function prepareEnemyMesh(mesh: InstancedMesh) {
   mesh.boundingSphere ??= new Sphere(new Vector3(), 96);
 }
 
-function EnemyBatch({ definition, runtime, alpha, onSelectEnemy }: EnemiesProps & { definition: EnemyDefinition }) {
+type EnemyBatchProps = EnemiesProps & { definition: EnemyDefinition };
+
+function EnemyBatch({ definition, runtime, alpha, reducedMotion, onSelectEnemy, model }: EnemyBatchProps & { model: InstancedAsset }) {
   const bodies = useRef<InstancedMesh>(null);
   const shades = useRef<InstancedMesh>(null);
   const ids = useRef<Int32Array | null>(null);
   const shadeIds = useRef<Int32Array | null>(null);
   const transform = useMemo(() => new Object3D(), []);
-  const geometry = useMemo(() => sculpture(enemyPieces(definition.visual), definition.color), [definition]);
+  const { geometry, material, localTransform } = model;
   const { flying, boss, stealth } = definition.traits;
 
   useEffect(() => {
     ids.current = new Int32Array(drawCapacity);
     if (stealth) shadeIds.current = new Int32Array(drawCapacity);
   }, [stealth]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame(() => {
     const mesh = bodies.current;
@@ -53,13 +56,14 @@ function EnemyBatch({ definition, runtime, alpha, onSelectEnemy }: EnemiesProps 
       if (hidden ? shadesCount >= drawCapacity : count >= drawCapacity) continue;
 
       interpolatePosition(transform.position, position, alpha.current);
-      const bounce = Math.sin(enemy.progress * (flying ? 175 : 245) + id * 2.38);
+      const bounce = reducedMotion ? 0 : Math.sin(enemy.progress * (flying ? 175 : 245) + id * 2.38);
       const turn = Math.atan2(position.x - position.previousX, position.z - position.previousZ);
       const size = boss ? 1.28 : 1;
       transform.position.setY(transform.position.y + bounce * (flying ? 0.16 : 0.045));
       transform.rotation.set(flying ? bounce * 0.095 : 0, turn, 0);
       transform.scale.set(size * (1 - bounce * 0.055), size * (0.98 + bounce * 0.10), size);
       transform.updateMatrix();
+      if (localTransform) transform.matrix.multiply(localTransform);
 
       if (hidden) {
         ethereal.setMatrixAt(shadesCount, transform.matrix);
@@ -89,14 +93,14 @@ function EnemyBatch({ definition, runtime, alpha, onSelectEnemy }: EnemiesProps 
   return (
     <group>
       <instancedMesh
-        args={[geometry, undefined, drawCapacity]}
+        args={[geometry, material, drawCapacity]}
         ref={bodies}
         onUpdate={prepareEnemyMesh}
         count={0}
         frustumCulled={false}
         onClick={onSelectEnemy ? (event) => select(event, false) : undefined}
       >
-        <meshStandardMaterial vertexColors roughness={0.82} flatShading />
+        {!material && <meshStandardMaterial vertexColors roughness={0.82} flatShading />}
       </instancedMesh>
       {stealth && (
         <instancedMesh
@@ -107,17 +111,36 @@ function EnemyBatch({ definition, runtime, alpha, onSelectEnemy }: EnemiesProps 
           frustumCulled={false}
           onClick={onSelectEnemy ? (event) => select(event, true) : undefined}
         >
-          <meshBasicMaterial vertexColors transparent opacity={0.34} depthWrite={false} />
+          <meshBasicMaterial vertexColors={Boolean(geometry.attributes.color)} transparent opacity={0.34} depthWrite={false} />
         </instancedMesh>
       )}
     </group>
   );
 }
 
+function FallbackEnemyBatch(props: EnemyBatchProps) {
+  const { definition } = props;
+  const geometry = useMemo(() => sculpture(enemyPieces(definition.visual), definition.color), [definition]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <EnemyBatch {...props} model={{ geometry }} />;
+}
+
+function LoadedEnemyBatch({ path, ...props }: EnemyBatchProps & { path: string }) {
+  const model = useInstancedAsset(path);
+  return <EnemyBatch {...props} model={model} />;
+}
+
 export function Enemies(props: EnemiesProps) {
   return (
     <group>
-      {enemies.map((definition) => <EnemyBatch key={definition.id} definition={definition} {...props} />)}
+      {enemies.map((definition) => {
+        const fallback = <FallbackEnemyBatch definition={definition} {...props} />;
+        return definition.model ? (
+          <LoadingModel key={definition.model} fallback={fallback}>
+            <LoadedEnemyBatch path={definition.model} definition={definition} {...props} />
+          </LoadingModel>
+        ) : <FallbackEnemyBatch key={definition.id} definition={definition} {...props} />;
+      })}
       <EnemyIndicators runtime={props.runtime} alpha={props.alpha} />
     </group>
   );

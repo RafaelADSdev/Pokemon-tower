@@ -1,6 +1,7 @@
+import type { GameFeedback } from '../ecs/effectPool';
 import type { EnemyEntity } from '../ecs/world';
 
-export function abilitySystem(enemies: readonly EnemyEntity[], delta: number) {
+export function abilitySystem(enemies: readonly EnemyEntity[], feedback: GameFeedback, delta: number) {
   for (const source of enemies) {
     const { enemy, position } = source;
     if (enemy.health <= 0 || enemy.escaped) continue;
@@ -11,6 +12,7 @@ export function abilitySystem(enemies: readonly EnemyEntity[], delta: number) {
     enemy.abilityCooldown -= delta;
     if (enemy.abilityCooldown > 0) continue;
     enemy.abilityCooldown += boss.interval;
+    feedback.queue('boss');
 
     const radiusSquared = boss.radius ** 2;
     for (const target of enemies) {

@@ -9,6 +9,7 @@ import type { ActiveWave } from '../systems/waves';
 
 export type { TargetPriority };
 export type TowerLevel = CreatureLevel;
+export type EffectKind = 'shot' | 'impact' | 'damage' | 'death' | 'leak';
 
 export interface TowerStats {
   damage: number;
@@ -79,12 +80,20 @@ export interface GameEntity {
     status: StatusApplication | undefined;
     airMultiplier: number;
   };
-  effect?: true;
+  effect?: {
+    kind: EffectKind;
+    color: string;
+    value: number;
+    age: number;
+    duration: number;
+    serial: number;
+  };
 }
 
 export type EnemyEntity = With<GameEntity, 'enemy'>;
 export type TowerEntity = With<GameEntity, 'tower'>;
 export type ProjectileEntity = With<GameEntity, 'projectile'>;
+export type EffectEntity = With<GameEntity, 'effect'>;
 
 export function createPosition(x = 0, y = 0, z = 0): Position {
   return { x, y, z, previousX: x, previousY: y, previousZ: z };

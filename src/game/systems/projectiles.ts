@@ -1,9 +1,17 @@
+import type { GameFeedback } from '../ecs/effectPool';
 import type { ProjectilePool } from '../ecs/projectilePool';
 import { snapshotPosition, type EnemyEntity, type ProjectileEntity } from '../ecs/world';
 import { damageEnemy } from './damage';
 import { canHitTarget } from './targeting';
 
-function splashDamage(target: EnemyEntity, projectile: ProjectileEntity['projectile'], enemies: readonly EnemyEntity[]) {
+function applyProjectileDamage(target: EnemyEntity, projectile: ProjectileEntity['projectile'], feedback: GameFeedback) {
+  const damage = damageEnemy(target, projectile);
+  if (damage > 0) feedback.spawn('damage', target.position, projectile.color, damage);
+}
+
+function splashDamage(
+  target: EnemyEntity, projectile: ProjectileEntity['projectile'], enemies: readonly EnemyEntity[], feedback: GameFeedback,
+) {
   const radiusSquared = projectile.splash ** 2;
   if (radiusSquared === 0) return;
 
@@ -11,12 +19,12 @@ function splashDamage(target: EnemyEntity, projectile: ProjectileEntity['project
     if (other === target || !canHitTarget(other, projectile.targets)) continue;
     const dx = target.position.x - other.position.x;
     const dz = target.position.z - other.position.z;
-    if (dx * dx + dz * dz <= radiusSquared) damageEnemy(other, projectile);
+    if (dx * dx + dz * dz <= radiusSquared) applyProjectileDamage(other, projectile, feedback);
   }
 }
 
 export function projectileSystem(
-  entities: readonly ProjectileEntity[], enemies: readonly EnemyEntity[], pool: ProjectilePool, delta: number,
+  entities: readonly ProjectileEntity[], enemies: readonly EnemyEntity[], pool: ProjectilePool, feedback: GameFeedback, delta: number,
 ) {
   for (let index = entities.length - 1; index >= 0; index--) {
     const entity = entities[index];
@@ -33,8 +41,10 @@ export function projectileSystem(
     const step = projectile.speed * delta;
     const distanceSquared = dx * dx + dy * dy + dz * dz;
     if (distanceSquared <= step * step) {
-      damageEnemy(target, projectile);
-      splashDamage(target, projectile, enemies);
+      feedback.spawn('impact', target.position, projectile.color);
+      feedback.queue('impact');
+      applyProjectileDamage(target, projectile, feedback);
+      splashDamage(target, projectile, enemies, feedback);
       pool.release(entity);
       continue;
     }

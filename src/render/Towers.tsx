@@ -5,6 +5,7 @@ import { useStore } from "zustand";
 import { MathUtils, type Group } from "three";
 import type { TowerEntity } from "@/game/ecs/world";
 import type { GameRuntime } from "@/game/runtime";
+import { LoadingModel, TowerAsset } from "./models/ModelAssets";
 import { sculpture } from "./models/sculpture";
 import { towerPieces } from "./models/towerSculptures";
 
@@ -70,7 +71,11 @@ function Tower({ entity, selected }: { entity: TowerEntity; selected: boolean })
       )}
       {selected && (tower.stats.range > 0 || tower.stats.support) && <RangeOverlay reference={range} color={definition.color} />}
       <group ref={body} scale={evolved ? 1.18 : level === 2 ? 1.075 : 1}>
-        <TowerModel visual={appearance.visual} color={definition.color} />
+        {appearance.model ? (
+          <LoadingModel key={appearance.model} fallback={<TowerModel visual={appearance.visual} color={definition.color} />}>
+            <TowerAsset path={appearance.model} />
+          </LoadingModel>
+        ) : <TowerModel visual={appearance.visual} color={definition.color} />}
       </group>
     </group>
   );

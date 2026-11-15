@@ -46,7 +46,7 @@ export const starterEnemy: EnemyDefinition = {
   leakDamage: 1,
   color: "#91cf8f",
   visual: "mossmite",
-  model: null,
+  model: "/models/mossmite.glb",
   traits: {},
 };
 
@@ -65,7 +65,7 @@ export const enemies: readonly EnemyDefinition[] = [
     leakDamage: 1,
     color: "#dfc665",
     visual: "reedrunner",
-    model: null,
+    model: "/models/reedrunner.glb",
     traits: {},
   },
   {
@@ -81,7 +81,7 @@ export const enemies: readonly EnemyDefinition[] = [
     leakDamage: 2,
     color: "#ac9078",
     visual: "flinthide",
-    model: null,
+    model: "/models/flinthide.glb",
     traits: {},
   },
   {
@@ -97,7 +97,7 @@ export const enemies: readonly EnemyDefinition[] = [
     leakDamage: 1,
     color: "#8bcee4",
     visual: "galefoal",
-    model: null,
+    model: "/models/galefoal.glb",
     traits: { flying: true },
   },
   {
@@ -113,7 +113,7 @@ export const enemies: readonly EnemyDefinition[] = [
     leakDamage: 1,
     color: "#b1ca79",
     visual: "springtail",
-    model: null,
+    model: "/models/springtail.glb",
     traits: { regen: 5.8 },
   },
   {
@@ -129,7 +129,7 @@ export const enemies: readonly EnemyDefinition[] = [
     leakDamage: 1,
     color: "#e89566",
     visual: "cindershield",
-    model: null,
+    model: "/models/cindershield.glb",
     traits: { shield: { element: "pedra", health: 63 } },
   },
   {
@@ -145,7 +145,7 @@ export const enemies: readonly EnemyDefinition[] = [
     leakDamage: 1,
     color: "#d8ae74",
     visual: "hollowpod",
-    model: null,
+    model: "/models/hollowpod.glb",
     traits: { split: { enemyId: starterEnemy.id, count: 2 } },
   },
   {
@@ -161,7 +161,7 @@ export const enemies: readonly EnemyDefinition[] = [
     leakDamage: 1,
     color: "#b4a8da",
     visual: "mistveil",
-    model: null,
+    model: "/models/mistveil.glb",
     traits: { stealth: true },
   },
   {
@@ -177,7 +177,7 @@ export const enemies: readonly EnemyDefinition[] = [
     leakDamage: 5,
     color: "#84ad6a",
     visual: "marrowcrown",
-    model: null,
+    model: "/models/marrowcrown.glb",
     traits: { boss: { kind: "heal", radius: 4.1, strength: 47, interval: 3 } },
   },
   {
@@ -193,7 +193,7 @@ export const enemies: readonly EnemyDefinition[] = [
     leakDamage: 6,
     color: "#f29665",
     visual: "ashdrummer",
-    model: null,
+    model: "/models/ashdrummer.glb",
     traits: { boss: { kind: "haste", radius: 4.4, strength: 0.38, interval: 4.1, duration: 2.8 } },
   },
 ];

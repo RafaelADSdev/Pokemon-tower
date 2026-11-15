@@ -1,16 +1,23 @@
 "use client";
 
-import { OrbitControls, OrthographicCamera } from "@react-three/drei";
+import { OrbitControls, OrthographicCamera, PerformanceMonitor } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useMemo, useRef, type ComponentRef } from "react";
+import { lazy, Suspense, useMemo, useRef, useState, type ComponentRef } from "react";
 import { Color, MOUSE, TOUCH, Vector3 } from "three";
 import type { MapDefinition } from "@/data/maps/types";
 import type { EnemyEntity } from "@/game/ecs/world";
 import type { GameRuntime } from "@/game/runtime";
+import { CanvasFallback } from "./CanvasFallback";
+import { Effects } from "./Effects";
 import { Enemies } from "./Enemies";
 import { Map } from "./Map";
 import { Projectiles } from "./Projectiles";
+import { RenderBoundary } from "./RenderBoundary";
 import { Towers } from "./Towers";
+import { supportsWebGL2, useCompactGraphics, useReducedMotion } from "./devicePreferences";
+import { ModelWarmup } from "./models/ModelAssets";
+
+const PostProcessing = lazy(() => import("./PostProcessing"));
 
 interface SceneProps {
   map: MapDefinition;
@@ -18,6 +25,7 @@ interface SceneProps {
   selectedSlot?: string | null;
   onSelectSlot?: (id: string) => void;
   onSelectEnemy?: (entity: EnemyEntity) => void;
+  unavailableMessage?: string;
 }
 
 const dioramaTarget: [number, number, number] = [0, 0.17, 0];
@@ -30,7 +38,7 @@ const boardLighting = {
   volcano: { sky: "#e8c9c1", earth: "#a45239", key: "#ffe0b2", fill: "#fba67d", fillPower: 0.89 },
 };
 
-function DioramaCamera({ map }: { map: MapDefinition }) {
+function DioramaCamera({ map, reducedMotion }: { map: MapDefinition; reducedMotion: boolean }) {
   const size = useThree((state) => state.size);
   const orbit = useRef<ComponentRef<typeof OrbitControls>>(null);
   const offset = useMemo(() => new Vector3(), []);
@@ -46,7 +54,7 @@ function DioramaCamera({ map }: { map: MapDefinition }) {
         ref={orbit}
         makeDefault
         enableRotate={false}
-        enableDamping
+        enableDamping={!reducedMotion}
         screenSpacePanning
         enablePan
         minZoom={fit * 0.78}
@@ -106,10 +114,12 @@ function Background({ tint }: { tint: string }) {
   );
 }
 
-function BattleEntities({ runtime, selectedSlot, onSelectEnemy }: {
+function BattleEntities({ runtime, selectedSlot, onSelectEnemy, compact, reducedMotion }: {
   runtime: GameRuntime;
   selectedSlot?: string | null;
   onSelectEnemy?: SceneProps["onSelectEnemy"];
+  compact: boolean;
+  reducedMotion: boolean;
 }) {
   const alpha = useRef(0);
   useFrame((_, delta) => {
@@ -117,45 +127,81 @@ function BattleEntities({ runtime, selectedSlot, onSelectEnemy }: {
   }, -2);
   return (
     <>
-      <Enemies runtime={runtime} alpha={alpha} onSelectEnemy={onSelectEnemy} />
+      <ModelWarmup runtime={runtime} />
+      <Enemies runtime={runtime} alpha={alpha} reducedMotion={reducedMotion} onSelectEnemy={onSelectEnemy} />
       <Projectiles runtime={runtime} alpha={alpha} />
       <Towers runtime={runtime} selectedSlot={selectedSlot} />
+      <Effects runtime={runtime} compact={compact} reducedMotion={reducedMotion} />
     </>
   );
 }
 
-export function Scene({ map, runtime, selectedSlot, onSelectSlot, onSelectEnemy }: SceneProps) {
+export function Scene({
+  map, runtime, selectedSlot, onSelectSlot, onSelectEnemy,
+  unavailableMessage = "Exibição 3D indisponível. Use as posições e os comandos da partida.",
+}: SceneProps) {
+  const compact = useCompactGraphics();
+  const reducedMotion = useReducedMotion();
+  const [contextLost, setContextLost] = useState(false);
+  const [quality, setQuality] = useState(0.85);
+  const floor = compact ? 0.68 : 0.82;
+  const ceiling = Math.min(typeof window === "undefined" ? 1 : window.devicePixelRatio, compact ? 1.2 : 1.65);
+  const dpr = Math.round((Math.min(floor, ceiling) + (ceiling - Math.min(floor, ceiling)) * quality) * 100) / 100;
+  const highEffects = !compact && quality >= 0.55;
   const light = boardLighting[map.theme.biome];
+  const fallback = <CanvasFallback runtime={runtime} message={unavailableMessage} />;
+  if (contextLost || !supportsWebGL2()) return fallback;
+
   return (
-    <Canvas
-      orthographic
-      camera={{ position: cameraPosition, near: 0.1, far: 130 }}
-      shadows="percentage"
-      dpr={[1, 1.65]}
-      gl={{ alpha: false, powerPreference: "high-performance" }}
-    >
-      <color attach="background" args={[map.theme.atmosphere]} />
-      <hemisphereLight args={[light.sky, light.earth, 1.55]} />
-      <directionalLight
-        castShadow
-        color={light.key}
-        intensity={2.15}
-        position={[-8, 14, 7]}
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-left={-14}
-        shadow-camera-right={14}
-        shadow-camera-top={13}
-        shadow-camera-bottom={-13}
-        shadow-camera-near={1}
-        shadow-camera-far={36}
-        shadow-normalBias={0.024}
-      />
-      <directionalLight color={light.fill} intensity={light.fillPower} position={[7, 9, -10]} />
-      <Background tint={map.theme.atmosphere} />
-      <Map map={map} selectedSlot={selectedSlot} onSelectSlot={onSelectSlot} />
-      <DioramaCamera map={map} />
-      {runtime && <BattleEntities runtime={runtime} selectedSlot={selectedSlot} onSelectEnemy={onSelectEnemy} />}
-    </Canvas>
+    <RenderBoundary fallback={fallback}>
+      <Canvas
+        orthographic
+        camera={{ position: cameraPosition, near: 0.1, far: 130 }}
+        shadows={highEffects ? "percentage" : false}
+        dpr={dpr}
+        gl={{ alpha: false, powerPreference: "high-performance" }}
+        fallback={fallback}
+        onCreated={({ gl }) => {
+          gl.domElement.addEventListener("webglcontextlost", () => setContextLost(true), { once: true });
+        }}
+      >
+        <color attach="background" args={[map.theme.atmosphere]} />
+        <hemisphereLight args={[light.sky, light.earth, 1.55]} />
+        <directionalLight
+          castShadow={highEffects}
+          color={light.key}
+          intensity={2.15}
+          position={[-8, 14, 7]}
+          shadow-mapSize={[1024, 1024]}
+          shadow-camera-left={-14}
+          shadow-camera-right={14}
+          shadow-camera-top={13}
+          shadow-camera-bottom={-13}
+          shadow-camera-near={1}
+          shadow-camera-far={36}
+          shadow-normalBias={0.024}
+        />
+        <directionalLight color={light.fill} intensity={light.fillPower} position={[7, 9, -10]} />
+        <Background tint={map.theme.atmosphere} />
+        <Map map={map} selectedSlot={selectedSlot} onSelectSlot={onSelectSlot} />
+        <DioramaCamera map={map} reducedMotion={reducedMotion} />
+        <PerformanceMonitor
+          factor={0.85}
+          ms={500}
+          iterations={4}
+          flipflops={6}
+          bounds={(refresh) => [Math.min(compact ? 32 : 47, refresh * 0.85), Math.min(90, refresh * 0.97)]}
+          onChange={({ factor }) => setQuality(factor)}
+          onFallback={() => setQuality(0.16)}
+        />
+        {runtime && <BattleEntities runtime={runtime} selectedSlot={selectedSlot} onSelectEnemy={onSelectEnemy} compact={compact || !highEffects} reducedMotion={reducedMotion} />}
+        {highEffects && !reducedMotion && (
+          <RenderBoundary fallback={null}>
+            <Suspense fallback={null}><PostProcessing /></Suspense>
+          </RenderBoundary>
+        )}
+      </Canvas>
+    </RenderBoundary>
   );
 }
 
