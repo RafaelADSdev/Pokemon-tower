@@ -5,12 +5,15 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef, type ComponentRef } from "react";
 import { Color, MOUSE, TOUCH, Vector3 } from "three";
 import type { MapDefinition } from "@/data/maps/types";
-import { useGameStore } from "@/game/store/gameStore";
-import { createGameClock } from "@/game/time";
+import type { GameRuntime } from "@/game/runtime";
+import { Enemies } from "./Enemies";
 import { Map } from "./Map";
+import { Projectiles } from "./Projectiles";
+import { Towers } from "./Towers";
 
 interface SceneProps {
   map: MapDefinition;
+  runtime?: GameRuntime;
   selectedSlot?: string | null;
   onSelectSlot?: (id: string) => void;
 }
@@ -96,21 +99,26 @@ function Background({ tint }: { tint: string }) {
   );
 }
 
-function SimulationClock() {
-  const clock = useMemo(() => createGameClock(), []);
+function BattleEntities({ runtime, selectedSlot }: { runtime: GameRuntime; selectedSlot?: string | null }) {
+  const alpha = useRef(0);
   useFrame((_, delta) => {
-    const { speed, paused } = useGameStore.getState();
-    clock.advance(delta, speed, paused);
-  });
-  return null;
+    alpha.current = runtime.advance(delta);
+  }, -2);
+  return (
+    <>
+      <Enemies runtime={runtime} alpha={alpha} />
+      <Projectiles runtime={runtime} alpha={alpha} />
+      <Towers runtime={runtime} selectedSlot={selectedSlot} />
+    </>
+  );
 }
 
-export function Scene({ map, selectedSlot, onSelectSlot }: SceneProps) {
+export function Scene({ map, runtime, selectedSlot, onSelectSlot }: SceneProps) {
   return (
     <Canvas
       orthographic
       camera={{ position: cameraPosition, near: 0.1, far: 130 }}
-      shadows
+      shadows="percentage"
       dpr={[1, 1.65]}
       gl={{ alpha: false, powerPreference: "high-performance" }}
     >
@@ -134,7 +142,7 @@ export function Scene({ map, selectedSlot, onSelectSlot }: SceneProps) {
       <Background tint={map.theme.atmosphere} />
       <Map map={map} selectedSlot={selectedSlot} onSelectSlot={onSelectSlot} />
       <DioramaCamera map={map} />
-      <SimulationClock />
+      {runtime && <BattleEntities runtime={runtime} selectedSlot={selectedSlot} />}
     </Canvas>
   );
 }

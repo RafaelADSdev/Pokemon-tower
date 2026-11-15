@@ -1,5 +1,4 @@
-import { create, type StateCreator } from 'zustand';
-import { createStore } from 'zustand/vanilla';
+import { create, createStore, type StateCreator } from 'zustand';
 import { gameRules } from '@/data/rules';
 import type { GameSpeed } from '../time';
 
@@ -14,6 +13,7 @@ interface RunState {
   speed: GameSpeed;
   status: GameStatus;
   selectedSlot: string | null;
+  occupiedSlots: Readonly<Partial<Record<string, string>>>;
 }
 
 export interface GameState extends RunState {
@@ -21,7 +21,7 @@ export interface GameState extends RunState {
   togglePaused: () => void;
   setSpeed: (speed: GameSpeed) => void;
   selectSlot: (slot: string | null) => void;
-  reset: () => void;
+  reset: (maxWaves?: number) => void;
 }
 
 const initialRun: RunState = {
@@ -33,6 +33,7 @@ const initialRun: RunState = {
   speed: 1,
   status: 'ready',
   selectedSlot: null,
+  occupiedSlots: {},
 };
 
 const state: StateCreator<GameState> = (set) => ({
@@ -41,7 +42,7 @@ const state: StateCreator<GameState> = (set) => ({
   togglePaused: () => set(({ paused }) => ({ paused: !paused })),
   setSpeed: (speed) => set({ speed }),
   selectSlot: (selectedSlot) => set({ selectedSlot }),
-  reset: () => set(initialRun),
+  reset: (maxWaves = initialRun.maxWaves) => set({ ...initialRun, maxWaves }),
 });
 
 export const useGameStore = create<GameState>(state);

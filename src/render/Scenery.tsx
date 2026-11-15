@@ -79,6 +79,10 @@ function makeScenery(map: MapDefinition) {
     !nearTrail(x, z, map, distance) &&
     !map.slots.some(({ position }) => Math.hypot(position[0] - x, position[1] - z) < distance + 0.18)
   );
+  const clearSightline = (x: number, z: number) => map.slots.every(({ position: [slotX, slotZ] }) => {
+    const dz = z - slotZ;
+    return dz < -0.2 || dz > 2.55 || Math.abs(x - slotX - 0.22 * dz) > 0.76;
+  });
 
   function tree(x: number, z: number, scale: number) {
     const yaw = random() * Math.PI;
@@ -111,7 +115,11 @@ function makeScenery(map: MapDefinition) {
     const perimeter = Math.abs(x) > halfWidth - 1.6 || z < -halfDepth + 1.5;
     if (!open(x, z, perimeter ? 0.87 : 1.20)) continue;
 
-    if ((perimeter || random() > 0.72) && treeLocations.every(([tx, tz]) => Math.hypot(x - tx, z - tz) > 0.9)) {
+    if (
+      (perimeter || random() > 0.72) &&
+      clearSightline(x, z) &&
+      treeLocations.every(([tx, tz]) => Math.hypot(x - tx, z - tz) > 0.9)
+    ) {
       tree(x, z, (z > halfDepth - 2 ? 0.64 : 0.82) + random() * 0.58);
       stone(x + 0.58, 0.04, z + 0.08, 0.19 + random() * 0.31);
     } else {
