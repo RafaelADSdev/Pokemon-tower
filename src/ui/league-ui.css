@@ -1,0 +1,35 @@
+.league-ui {
+  --league-ink: #1b2c50;
+  --league-muted: #52617c;
+  --league-red: #bb243c;
+  --league-line: #dce4f2;
+  --league-surface: #fff;
+  --league-header-height: 4.25rem;
+  color-scheme: light;
+}
+
+.league-ui .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  min-height: var(--league-header-height);
+  background: #fbfcff;
+  border-bottom: 3px solid var(--league-red);
+  box-shadow: 0 .35rem .85rem #17264b14;
+}
+.league-ui .wordmark { color: var(--league-ink); font: 850 1.04rem/1.05 var(--body); letter-spacing: -.035em; }
+.league-ui .wordmark > span { background: #ffeeef; border-color: #f6ccd4; border-radius: .65rem; }
+.league-ui .site-nav a { color: var(--league-muted); }
+.league-ui .site-nav a[aria-current], .league-ui .site-nav a:hover { background: #fbeaf0; color: var(--league-red); }
+.league-ui .site-nav svg { color: currentColor; }
+.league-ui .site-control { color: var(--league-ink); border-color: var(--league-line); background: #f1f5fc; }
+.league-ui .site-control:hover { border-color: var(--league-red); }
+.league-ui .site-header :focus-visible { outline-color: #284dbd; }
+
+@media (max-width: 650px) {
+  .league-ui { --league-header-height: 3.6rem; }
+  .league-ui .wordmark { max-width: 9.5rem; font-size: .94rem; }
+  .league-ui .wordmark > span { display: grid; flex: 0 0 auto; width: 1.85rem; height: 1.85rem; }
+  .league-ui .league-ball { width: 1.15rem; }
+  .league-ui .league-ball::after { width: .44rem; }
+}
