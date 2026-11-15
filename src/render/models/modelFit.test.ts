@@ -1,4 +1,4 @@
-import { BoxGeometry, Group, Mesh, MeshBasicMaterial } from "three";
+import { Bone, BoxGeometry, Group, Mesh, MeshBasicMaterial } from "three";
 import { expect, test } from "vitest";
 import type { CreatureLevel } from "@/data/creatures";
 import { pokemonModel } from "@/data/pokemon";
@@ -27,4 +27,31 @@ test("Charizard grows past both earlier forms even with its wider silhouette", (
   for (const model of [charmander, charmeleon, charizard]) {
     expect(model.base).toBeCloseTo(towerPadTop);
   }
+});
+
+test.each([
+  { dex: 26, hips: "Hips", tailLength: 5 },
+  { dex: 6, hips: "Hips_62", tailLength: 7 },
+])("keeps Pokémon $dex standing over the pad when its tail extends behind it", ({ dex, hips, tailLength }) => {
+  const scene = new Group();
+  const bone = new Bone();
+  bone.name = hips;
+  bone.position.set(0.1, 0.7, 0.2);
+  scene.add(bone);
+
+  const material = new MeshBasicMaterial();
+  const body = new Mesh(new BoxGeometry(1, 1.4, 1), material);
+  body.position.copy(bone.position);
+  const tail = new Mesh(new BoxGeometry(0.2, 0.2, tailLength), material);
+  tail.position.set(0.1, 0.45, 0.2 - tailLength / 2);
+  scene.add(body, tail);
+  const { offset, scale } = prepareTowerModel(scene, pokemonModel(dex), 3);
+
+  body.geometry.dispose();
+  tail.geometry.dispose();
+  material.dispose();
+
+  expect(offset[0] + bone.position.x * scale).toBeCloseTo(0);
+  expect(offset[1]).toBeCloseTo(towerPadTop);
+  expect(offset[2] + bone.position.z * scale).toBeCloseTo(0);
 });

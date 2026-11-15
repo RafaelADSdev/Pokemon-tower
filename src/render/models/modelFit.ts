@@ -21,16 +21,17 @@ const towerSizes: Record<CreatureLevel, TowerModelSize> = {
   3: { height: 1.85, footprint: 2.32 },
 };
 
-// Leave extra room for wings and long tails while keeping a uniform fit.
-const wideTowerFootprints = new Map([
-  [pokemonModel(6), 3.45], // Charizard
-  [pokemonModel(26), 2.64], // Raichu
-  [pokemonModel(264), 2.64], // Linoone
+// Keep the largest silhouettes readable. Use the pelvis when a long tail
+// shifts the bounds far enough to move the Pokémon off its pad.
+const wideTowerFits = new Map<string, { footprint: number; anchorBone?: string }>([
+  [pokemonModel(6), { footprint: 3.45, anchorBone: "Hips_62" }], // Charizard
+  [pokemonModel(26), { footprint: 2.64, anchorBone: "Hips" }], // Raichu
+  [pokemonModel(264), { footprint: 2.64 }], // Linoone
 ]);
 
-function fit(bounds: Box3, height: number, footprint: number, baseY: number) {
+function fit(bounds: Box3, height: number, footprint: number, baseY: number, anchor?: Vector3) {
   const size = bounds.getSize(new Vector3());
-  const center = bounds.getCenter(new Vector3());
+  const center = anchor ?? bounds.getCenter(new Vector3());
   const scale = Math.min(height / (size.y || 1), footprint / (Math.max(size.x, size.z) || 1));
   if (bounds.isEmpty() || !Number.isFinite(scale)) throw new Error("Model has no usable geometry bounds.");
   const offset: [number, number, number] = [-center.x * scale, baseY - bounds.min.y * scale, -center.z * scale];
@@ -48,7 +49,11 @@ export function prepareTowerModel(scene: Object3D, path: string, stage: Creature
   model.updateMatrixWorld(true);
   const bounds = new Box3().setFromObject(model, true);
   const { height, footprint } = towerSizes[stage];
-  return { model, ...fit(bounds, height, wideTowerFootprints.get(path) ?? footprint, towerPadTop) };
+  const wideFit = wideTowerFits.get(path);
+  const anchor = wideFit?.anchorBone
+    ? model.getObjectByName(wideFit.anchorBone)?.getWorldPosition(new Vector3())
+    : undefined;
+  return { model, ...fit(bounds, height, wideFit?.footprint ?? footprint, towerPadTop, anchor) };
 }
 
 function bakeMesh(mesh: Mesh) {
