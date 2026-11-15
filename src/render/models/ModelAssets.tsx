@@ -22,7 +22,7 @@ export interface AttackPose {
   release: number;
 }
 
-interface TowerMotionProps {
+export interface TowerMotionProps {
   idlePose?: string;
   attackPose: RefObject<AttackPose>;
   element: ElementId;

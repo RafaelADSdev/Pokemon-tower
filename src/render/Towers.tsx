@@ -1,29 +1,16 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useEntities } from "miniplex-react";
 import { useStore } from "zustand";
 import { MathUtils, type Group, type MeshStandardMaterial } from "three";
-import { getCreatureAppearance } from "@/data/creatures";
 import type { ElementId } from "@/data/elements";
 import type { TowerEntity } from "@/game/ecs/world";
 import type { GameRuntime } from "@/game/runtime";
 import { ATTACK_WINDUP_SECONDS } from "@/game/systems/targeting";
 import type { GameSpeed } from "@/game/time";
-import { LoadingModel, TowerAsset, type AttackPose } from "./models/ModelAssets";
+import type { AttackPose } from "./models/ModelAssets";
+import { PokemonTowerModel } from "./models/PokemonTowerModel";
 import { towerPadTop } from "./models/modelFit";
-import { sculpture } from "./models/sculpture";
-import { towerPieces } from "./models/towerSculptures";
-
-function TowerModel({ visual, color }: { visual: string; color: string }) {
-  const geometry = useMemo(() => sculpture(towerPieces(visual), color), [color, visual]);
-  useEffect(() => () => geometry.dispose(), [geometry]);
-
-  return (
-    <mesh geometry={geometry} castShadow>
-      <meshStandardMaterial roughness={0.75} vertexColors flatShading />
-    </mesh>
-  );
-}
 
 function RangeOverlay({ reference, color }: { reference: React.RefObject<Group | null>; color: string }) {
   return (
@@ -74,10 +61,6 @@ function Tower({ entity, selected, paused, running, speed, reducedMotion }: {
   const pose = useRef<AttackPose>({ charge: 0, release: 0 });
   const { tower, position } = entity;
   const { definition, evolved, level } = tower;
-  const appearance = getCreatureAppearance(definition, level);
-  // Two-form families reach their final size with the first evolution.
-  const stage = level === 2 && !definition.intermediate ? 3 : level;
-  const fallbackScale = evolved ? 1.18 : level === 2 ? 1.075 : 1;
   const baseGlow = evolved ? 0.72 : 0.41;
   const motion = motionByElement[definition.element];
 
@@ -123,12 +106,6 @@ function Tower({ entity, selected, paused, running, speed, reducedMotion }: {
     }
   }, -1);
 
-  const fallback = (
-    <group position-y={-towerPadTop * fallbackScale} scale={fallbackScale}>
-      <TowerModel visual={appearance.visual} color={definition.color} />
-    </group>
-  );
-
   return (
     <group position={[position.x, position.y, position.z]}>
       <mesh position-y={0.155} receiveShadow>
@@ -148,13 +125,7 @@ function Tower({ entity, selected, paused, running, speed, reducedMotion }: {
       {selected && (tower.stats.range > 0 || tower.stats.support) && <RangeOverlay reference={range} color={definition.color} />}
       <group ref={facing} position-y={towerPadTop}>
         <group ref={body}>
-          {appearance.model ? (
-            <LoadingModel key={appearance.model} fallback={fallback}>
-              <group position-y={-towerPadTop}>
-                <TowerAsset path={appearance.model} stage={stage} idlePose={appearance.idlePose} attackPose={pose} element={definition.element} paused={paused} reducedMotion={reducedMotion} />
-              </group>
-            </LoadingModel>
-          ) : fallback}
+          <PokemonTowerModel definition={definition} level={level} attackPose={pose} element={definition.element} paused={paused} reducedMotion={reducedMotion} />
         </group>
       </group>
     </group>

@@ -13,7 +13,7 @@ pnpm dev
 
 Abra [Pokémon Tower League local](http://localhost:3000). Para testar a versão de produção, rode `pnpm build` e `pnpm start`.
 
-O navegador carrega os modelos 3D conforme a partida precisa deles. As malhas provisórias do jogo permitem jogar enquanto os GLBs estão em trânsito ou quando o serviço de modelos está indisponível. [Pokémon 3D API Assets](https://github.com/Pokemon-3D-api/assets)
+O navegador carrega os modelos 3D conforme a partida precisa deles. Durante uma evolução, a torre mantém o último Pokémon 3D carregado até a nova forma estar disponível. Enquanto o primeiro modelo carrega, a torre usa o retrato local do Pokémon. [Pokémon 3D API Assets](https://github.com/Pokemon-3D-api/assets)
 
 ## Jogar
 
