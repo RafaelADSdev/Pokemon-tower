@@ -10,6 +10,7 @@ import type { GameRuntime } from "@/game/runtime";
 import { ATTACK_WINDUP_SECONDS } from "@/game/systems/targeting";
 import type { GameSpeed } from "@/game/time";
 import { LoadingModel, TowerAsset, type AttackPose } from "./models/ModelAssets";
+import { towerPadTop } from "./models/modelFit";
 import { sculpture } from "./models/sculpture";
 import { towerPieces } from "./models/towerSculptures";
 
@@ -38,8 +39,6 @@ function RangeOverlay({ reference, color }: { reference: React.RefObject<Group |
     </group>
   );
 }
-
-const padTop = 0.21;
 
 interface AttackMotion {
   duration: number;
@@ -76,7 +75,9 @@ function Tower({ entity, selected, paused, running, speed, reducedMotion }: {
   const { tower, position } = entity;
   const { definition, evolved, level } = tower;
   const appearance = getCreatureAppearance(definition, level);
-  const modelScale = evolved ? 1.18 : level === 2 ? 1.075 : 1;
+  // Two-form families reach their final size with the first evolution.
+  const stage = level === 2 && !definition.intermediate ? 3 : level;
+  const fallbackScale = evolved ? 1.18 : level === 2 ? 1.075 : 1;
   const baseGlow = evolved ? 0.72 : 0.41;
   const motion = motionByElement[definition.element];
 
@@ -122,6 +123,12 @@ function Tower({ entity, selected, paused, running, speed, reducedMotion }: {
     }
   }, -1);
 
+  const fallback = (
+    <group position-y={-towerPadTop * fallbackScale} scale={fallbackScale}>
+      <TowerModel visual={appearance.visual} color={definition.color} />
+    </group>
+  );
+
   return (
     <group position={[position.x, position.y, position.z]}>
       <mesh position-y={0.155} receiveShadow>
@@ -139,15 +146,15 @@ function Tower({ entity, selected, paused, running, speed, reducedMotion }: {
         </mesh>
       )}
       {selected && (tower.stats.range > 0 || tower.stats.support) && <RangeOverlay reference={range} color={definition.color} />}
-      <group ref={facing} position-y={padTop}>
+      <group ref={facing} position-y={towerPadTop}>
         <group ref={body}>
-          <group position-y={-padTop * modelScale} scale={modelScale}>
-            {appearance.model ? (
-              <LoadingModel key={appearance.model} fallback={<TowerModel visual={appearance.visual} color={definition.color} />}>
-                <TowerAsset path={appearance.model} idlePose={appearance.idlePose} attackPose={pose} element={definition.element} paused={paused} reducedMotion={reducedMotion} />
-              </LoadingModel>
-            ) : <TowerModel visual={appearance.visual} color={definition.color} />}
-          </group>
+          {appearance.model ? (
+            <LoadingModel key={appearance.model} fallback={fallback}>
+              <group position-y={-towerPadTop}>
+                <TowerAsset path={appearance.model} stage={stage} idlePose={appearance.idlePose} attackPose={pose} element={definition.element} paused={paused} reducedMotion={reducedMotion} />
+              </group>
+            </LoadingModel>
+          ) : fallback}
         </group>
       </group>
     </group>

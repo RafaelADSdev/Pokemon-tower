@@ -1,10 +1,32 @@
 import { AnimationMixer, Box3, Matrix4, Mesh, SkinnedMesh, Vector3, type AnimationClip, type BufferGeometry, type Material, type Object3D } from "three";
 import { clone as cloneSkeleton } from "three/addons/utils/SkeletonUtils.js";
+import type { CreatureLevel } from "@/data/creatures";
+import { pokemonModel } from "@/data/pokemon";
 
 export interface ModelPart {
   geometry: BufferGeometry;
   material?: Material | Material[];
 }
+
+export const towerPadTop = 0.21;
+
+interface TowerModelSize {
+  readonly height: number;
+  readonly footprint: number;
+}
+
+const towerSizes: Record<CreatureLevel, TowerModelSize> = {
+  1: { height: 1.31, footprint: 1.51 },
+  2: { height: 1.54, footprint: 1.80 },
+  3: { height: 1.85, footprint: 2.32 },
+};
+
+// Leave extra room for wings and long tails while keeping a uniform fit.
+const wideTowerFootprints = new Map([
+  [pokemonModel(6), 3.45], // Charizard
+  [pokemonModel(26), 2.64], // Raichu
+  [pokemonModel(264), 2.64], // Linoone
+]);
 
 function fit(bounds: Box3, height: number, footprint: number, baseY: number) {
   const size = bounds.getSize(new Vector3());
@@ -15,7 +37,7 @@ function fit(bounds: Box3, height: number, footprint: number, baseY: number) {
   return { offset, scale };
 }
 
-export function prepareTowerModel(scene: Object3D, fixedPose?: AnimationClip) {
+export function prepareTowerModel(scene: Object3D, path: string, stage: CreatureLevel, fixedPose?: AnimationClip) {
   const model = cloneSkeleton(scene);
   if (fixedPose) {
     const mixer = new AnimationMixer(model);
@@ -25,7 +47,8 @@ export function prepareTowerModel(scene: Object3D, fixedPose?: AnimationClip) {
   model.traverse((object) => { if (object instanceof Mesh) object.castShadow = true; });
   model.updateMatrixWorld(true);
   const bounds = new Box3().setFromObject(model, true);
-  return { model, ...fit(bounds, 1.31, 1.35, 0.21) };
+  const { height, footprint } = towerSizes[stage];
+  return { model, ...fit(bounds, height, wideTowerFootprints.get(path) ?? footprint, towerPadTop) };
 }
 
 function bakeMesh(mesh: Mesh) {

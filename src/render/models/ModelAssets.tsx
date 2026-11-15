@@ -3,6 +3,7 @@ import { useAnimations, useGLTF } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { Bone, Mesh, Quaternion, Vector3, type AnimationClip, type Group, type Matrix4, type Object3D } from "three";
 import { useStore } from "zustand";
+import type { CreatureLevel } from "@/data/creatures";
 import type { ElementId } from "@/data/elements";
 import { enemyById } from "@/data/enemies";
 import type { WaveDefinition } from "@/data/waves/types";
@@ -105,12 +106,14 @@ function useAttackRig(model: Object3D, pose: RefObject<AttackPose>, element: Ele
   }, [rig]);
 }
 
-function FittedTower({ scene, clips, idlePose, attackPose, element, reducedMotion, paused }: TowerMotionProps & {
+function FittedTower({ path, stage, scene, clips, idlePose, attackPose, element, reducedMotion, paused }: TowerMotionProps & {
+  path: string;
+  stage: CreatureLevel;
   scene: Group;
   clips: AnimationClip[];
 }) {
   const fixedPose = idlePose ? clips.find(({ name }) => name === idlePose) : undefined;
-  const { model, offset, scale } = useMemo(() => prepareTowerModel(scene, fixedPose), [scene, fixedPose]);
+  const { model, offset, scale } = useMemo(() => prepareTowerModel(scene, path, stage, fixedPose), [scene, path, stage, fixedPose]);
   const idleClips = useMemo(() => {
     const idle = reducedMotion || fixedPose ? undefined : clips.find(({ name }) => /idle/i.test(name));
     return idle ? [idle] : [];
@@ -139,14 +142,14 @@ function FittedTower({ scene, clips, idlePose, attackPose, element, reducedMotio
   );
 }
 
-export function TowerAsset({ path, ...motion }: TowerMotionProps & { path: string }) {
+export function TowerAsset({ path, stage, ...motion }: TowerMotionProps & { path: string; stage: CreatureLevel }) {
   const { nodes, scene, animations } = useGLTF(path);
   const model = generatedMesh(path, nodes);
   if (model) {
     model.updateWorldMatrix(true, false);
     return <mesh geometry={model.geometry} material={model.material} matrix={model.matrixWorld} matrixAutoUpdate={false} castShadow />;
   }
-  return <FittedTower scene={scene} clips={animations} {...motion} />;
+  return <FittedTower path={path} stage={stage} scene={scene} clips={animations} {...motion} />;
 }
 
 function generatedMesh(path: string, nodes: Record<string, Object3D>) {
