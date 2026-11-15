@@ -50,7 +50,7 @@ function trailGeometry(path: readonly Waypoint[], halfWidth: number) {
   return new ShapeGeometry(shapeFromPoints([...left, ...right.reverse()]));
 }
 
-function Trail({ path, trail, edge }: { path: readonly Waypoint[]; trail: string; edge: string }) {
+function Trail({ path, trail, edge, lift }: { path: readonly Waypoint[]; trail: string; edge: string; lift: number }) {
   const shapes = useMemo(() => [
     trailGeometry(path, 0.68),
     trailGeometry(path, 0.55),
@@ -59,7 +59,7 @@ function Trail({ path, trail, edge }: { path: readonly Waypoint[]; trail: string
   useEffect(() => () => shapes.forEach((geometry) => geometry.dispose()), [shapes]);
 
   return (
-    <group rotation-x={-Math.PI / 2}>
+    <group position-y={lift} rotation-x={-Math.PI / 2}>
       <mesh geometry={shapes[0]} position-z={0.015} receiveShadow>
         <meshStandardMaterial color={edge} roughness={1} />
       </mesh>
@@ -120,6 +120,26 @@ function Grid({ width, depth, color }: { width: number; depth: number; color: st
   );
 }
 
+const arrowPositions = new Float32Array([-0.20, 0, -0.16, 0, 0, 0.18, 0.20, 0, -0.16]);
+
+function SplitMarkers({ paths, color }: { paths: MapDefinition["paths"]; color: string }) {
+  return paths.map((path, index) => {
+    const middle = Math.floor(path.length / 2);
+    const [startX, startZ] = path[middle - 1];
+    const [endX, endZ] = path[middle];
+    const yaw = Math.atan2(endX - startX, endZ - startZ);
+
+    return (
+      <mesh key={index} position={[(startX + endX) / 2, 0.035, (startZ + endZ) / 2]} rotation-y={yaw}>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" args={[arrowPositions, 3]} />
+        </bufferGeometry>
+        <meshBasicMaterial color={color} transparent opacity={0.33} depthWrite={false} />
+      </mesh>
+    );
+  });
+}
+
 export function Terrain({ map }: { map: MapDefinition }) {
   const { width, depth } = map.size;
   const { terrain, trail, edge, accent } = map.theme;
@@ -138,8 +158,9 @@ export function Terrain({ map }: { map: MapDefinition }) {
       </mesh>
       <Grid width={width} depth={depth} color={accent} />
       {map.paths.map((path, index) => (
-        <Trail key={index} path={path} trail={trail} edge={edge} />
+        <Trail key={index} path={path} trail={trail} edge={edge} lift={index * 0.0004} />
       ))}
+      {map.paths.length > 1 && <SplitMarkers paths={map.paths} color={edge} />}
     </group>
   );
 }

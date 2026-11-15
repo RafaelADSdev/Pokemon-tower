@@ -24,6 +24,11 @@ const dioramaTarget: [number, number, number] = [0, 0.17, 0];
 const cameraPosition: [number, number, number] = [7.1, 25.8, 31.5];
 const mouseButtons = { LEFT: MOUSE.PAN, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN };
 const touches = { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_PAN };
+const boardLighting = {
+  forest: { sky: "#dde9df", earth: "#86715f", key: "#ffe8bc", fill: "#a3e0ce", fillPower: 0.78 },
+  cave: { sky: "#cfe6ff", earth: "#80769f", key: "#e3f2ff", fill: "#8ecfe0", fillPower: 0.98 },
+  volcano: { sky: "#e8c9c1", earth: "#a45239", key: "#ffe0b2", fill: "#fba67d", fillPower: 0.89 },
+};
 
 function DioramaCamera({ map }: { map: MapDefinition }) {
   const size = useThree((state) => state.size);
@@ -120,6 +125,7 @@ function BattleEntities({ runtime, selectedSlot, onSelectEnemy }: {
 }
 
 export function Scene({ map, runtime, selectedSlot, onSelectSlot, onSelectEnemy }: SceneProps) {
+  const light = boardLighting[map.theme.biome];
   return (
     <Canvas
       orthographic
@@ -129,10 +135,10 @@ export function Scene({ map, runtime, selectedSlot, onSelectSlot, onSelectEnemy 
       gl={{ alpha: false, powerPreference: "high-performance" }}
     >
       <color attach="background" args={[map.theme.atmosphere]} />
-      <hemisphereLight args={["#dde9df", "#86715f", 1.55]} />
+      <hemisphereLight args={[light.sky, light.earth, 1.55]} />
       <directionalLight
         castShadow
-        color="#ffe8bc"
+        color={light.key}
         intensity={2.15}
         position={[-8, 14, 7]}
         shadow-mapSize={[1024, 1024]}
@@ -144,7 +150,7 @@ export function Scene({ map, runtime, selectedSlot, onSelectSlot, onSelectEnemy 
         shadow-camera-far={36}
         shadow-normalBias={0.024}
       />
-      <directionalLight color="#a3e0ce" intensity={0.78} position={[7, 9, -10]} />
+      <directionalLight color={light.fill} intensity={light.fillPower} position={[7, 9, -10]} />
       <Background tint={map.theme.atmosphere} />
       <Map map={map} selectedSlot={selectedSlot} onSelectSlot={onSelectSlot} />
       <DioramaCamera map={map} />

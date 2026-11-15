@@ -3,7 +3,7 @@ import { creatureById, getCreatureStats, starterCreature, targetPriorities } fro
 import { enemyById, type EnemyDefinition } from '@/data/enemies';
 import type { MapDefinition } from '@/data/maps/types';
 import { gameRules } from '@/data/rules';
-import { forestWaves } from '@/data/waves/forest';
+import { getMapWaves } from '@/data/waves';
 import type { WaveDefinition } from '@/data/waves/types';
 import { compilePath, samplePath } from '@/lib/pathing';
 import { createProjectilePool } from './ecs/projectilePool';
@@ -26,10 +26,11 @@ const DEFAULT_SEED = 0x8d75a121;
 const ENEMY_BODY_HEIGHT = 0.45;
 const FLYING_HEIGHT = 1.25;
 
-interface RuntimeOptions {
+export interface RuntimeOptions {
   waves?: readonly WaveDefinition[];
   store?: StoreApi<GameState>;
   seed?: number;
+  canUseCreature?: (id: string) => boolean;
 }
 
 export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = {}) {
@@ -37,7 +38,7 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
   const pool = createProjectilePool(world);
   const clock = createGameClock();
   const store = options.store ?? createGameStore();
-  const definitions = options.waves ?? forestWaves;
+  const definitions = options.waves ?? getMapWaves(map.id);
   const paths = map.paths.map(compilePath);
   const airPaths = paths.map(({ waypoints }) => compilePath([waypoints[0], waypoints[waypoints.length - 1]]));
   if (!paths.length) throw new Error(`Map ${map.id} has no path`);
@@ -165,7 +166,7 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
 
       const slot = map.slots.find(({ id }) => id === slotId);
       const definition = Object.hasOwn(creatureById, creatureId) ? creatureById[creatureId] : undefined;
-      if (!slot || !definition || money < definition.cost) return false;
+      if (!slot || !definition || money < definition.cost || options.canUseCreature?.(definition.id) === false) return false;
 
       const [x, z] = slot.position;
       const stats = createTowerStats(definition, 1);

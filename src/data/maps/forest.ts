@@ -3,6 +3,12 @@ import type { MapDefinition } from "./types";
 export const forestMap: MapDefinition = {
   id: "forest",
   name: "Bosque de Âmbar",
+  nameEn: "Amberwood",
+  subtitle: "Trilha da clareira",
+  subtitleEn: "Clearing trail",
+  description: "Defenda uma trilha sinuosa entre pinheiros e clareiras de âmbar.",
+  descriptionEn: "Guard a winding trail through pines and amber clearings.",
+  difficulty: "intro",
   size: { width: 20, depth: 12 },
   paths: [
     [

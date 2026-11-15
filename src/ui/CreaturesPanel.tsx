@@ -1,6 +1,7 @@
 import { ArrowUp, Coins, Crosshair, LockKeyhole, Sprout } from 'lucide-react';
 import { brand } from '@/config/brand';
 import { creatures, creatureRoles, targetPriorities, type TargetPriority } from '@/data/creatures';
+import { getCreatureUnlockStars } from '@/data/progression';
 import { gameRules } from '@/data/rules';
 import type { GameRuntime } from '@/game/runtime';
 import type { GameState } from '@/game/store/gameStore';
@@ -8,7 +9,7 @@ import { ElementGlyph, ElementInfo } from './ElementInfo';
 
 const priorities: Record<TargetPriority, string> = { first: 'Primeiro', last: 'Último', strongest: 'Mais forte', nearest: 'Mais próximo' };
 
-export function CreaturesPanel({ runtime, game }: { runtime: GameRuntime; game: GameState }) {
+export function CreaturesPanel({ runtime, game, totalStars }: { runtime: GameRuntime; game: GameState; totalStars: number }) {
   const { money, selectedSlot, paused, status } = game;
   const active = !paused && (status === 'ready' || status === 'running');
   const entity = selectedSlot ? runtime.getTower(selectedSlot) : undefined;
@@ -61,14 +62,20 @@ export function CreaturesPanel({ runtime, game }: { runtime: GameRuntime; game: 
       <div className="panel-heading"><h2 id="recruit-title"><Sprout size={18} aria-hidden="true" /> {brand.creatures}</h2>{position && <span>{position}</span>}</div>
       <p className="panel-copy" role="status">{position ? 'Escolha a criatura para implantar.' : 'Escolha uma posição para montar sua defesa.'}</p>
       <div className="recruit-list">
-        {creatures.map((creature) => (
-          <button type="button" className="recruit" key={creature.id} disabled={!selectedSlot || !active || money < creature.cost}
-            onClick={() => selectedSlot && runtime.placeTower(selectedSlot, creature.id)} title={creature.description}>
-            <span className="recruit-emblem"><ElementGlyph element={creature.element} size={19} /></span>
-            <span className="recruit-copy"><strong>{creature.name}</strong><small>{creatureRoles[creature.role].name}</small><span className="price"><Coins size={12} aria-label="moedas" /> {creature.cost}</span></span>
-            {money < creature.cost && <LockKeyhole className="recruit-lock" size={12} aria-hidden="true" />}
-          </button>
-        ))}
+        {creatures.map((creature) => {
+          const required = getCreatureUnlockStars(creature.id);
+          const locked = totalStars < required;
+          return (
+            <button type="button" className="recruit" key={creature.id} disabled={locked || !selectedSlot || !active || money < creature.cost}
+              onClick={() => selectedSlot && runtime.placeTower(selectedSlot, creature.id)} title={creature.description}>
+              <span className="recruit-emblem"><ElementGlyph element={creature.element} size={19} /></span>
+              <span className="recruit-copy">
+                <strong>{creature.name}</strong><small>{creatureRoles[creature.role].name}</small>
+                <span className="price">{locked ? <><LockKeyhole size={12} aria-hidden="true" />{required} {required === 1 ? 'estrela' : 'estrelas'}</> : <><Coins size={12} aria-label="moedas" /> {creature.cost}</>}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );

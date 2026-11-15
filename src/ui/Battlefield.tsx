@@ -2,31 +2,38 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { ArrowLeft, Coins, Flag, Heart, RotateCcw, Sprout, X } from 'lucide-react';
-import { useState } from 'react';
+import { ArrowLeft, Coins, Flag, Heart, RotateCcw, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useStore } from 'zustand';
-import { brand } from '@/config/brand';
 import type { EnemyDefinition } from '@/data/enemies';
-import { forestMap } from '@/data/maps/forest';
-import { forestWaves } from '@/data/waves/forest';
+import type { MapDefinition } from '@/data/maps/types';
+import { getStarsForLives } from '@/data/progression';
 import { createGameRuntime } from '@/game/runtime';
 import type { EnemyEntity } from '@/game/ecs/world';
 import { BattleControls } from './BattleControls';
 import { CreaturesPanel } from './CreaturesPanel';
 import { ElementGlyph, ElementInfo, ElementTag } from './ElementInfo';
+import { SiteHeader } from './SiteHeader';
+import { Stars } from './Stars';
+import { canRecruitCreature, recordVictory, useProgress } from './useProgress';
 
 const Scene = dynamic(() => import('@/render/Scene').then((module) => module.Scene), {
   ssr: false,
   loading: () => <p role="status" className="board-loading">Preparando o campo…</p>,
 });
 
-export function Battlefield() {
-  const [runtime] = useState(() => createGameRuntime(forestMap, { waves: forestWaves }));
+export function Battlefield({ map }: { map: MapDefinition }) {
+  const [runtime] = useState(() => createGameRuntime(map, { canUseCreature: canRecruitCreature }));
   const game = useStore(runtime.store);
+  const { totalStars } = useProgress();
   const [previewEnemy, setPreviewEnemy] = useState<EnemyDefinition | null>(null);
   const { money, lives, wave, maxWaves, selectedSlot, selectSlot, occupiedSlots, selectedEnemyId, status } = game;
   const enemy = selectedEnemyId === null ? previewEnemy : runtime.getEnemy(selectedEnemyId)?.enemy.definition;
   const ended = status === 'victory' || status === 'defeat';
+
+  useEffect(() => {
+    if (status === 'victory') recordVictory(map.id, lives);
+  }, [status, map.id, lives]);
 
   function selectPosition(slot: string) {
     setPreviewEnemy(null);
@@ -39,15 +46,12 @@ export function Battlefield() {
   }
 
   return (
-    <main className="battle-shell">
-      <header className="battle-header">
-        <Link href="/" className="wordmark"><Sprout size={23} aria-hidden="true" />{brand.name}</Link>
-        <Link href="/" className="quiet-button"><ArrowLeft size={15} aria-hidden="true" /> Menu</Link>
-      </header>
-      <div className="battle-layout">
+    <div className="battle-shell">
+      <SiteHeader />
+      <main className="battle-layout">
         <section className="battle-main" aria-labelledby="map-name">
           <div className="battle-title">
-            <div><p className="section-kicker">Campo de batalha</p><h1 id="map-name">{forestMap.name}</h1></div>
+            <div><Link href="/#expedicoes" className="back-link battle-back"><ArrowLeft size={13} aria-hidden="true" /> Expedições</Link><h1 id="map-name">{map.name}</h1></div>
             <dl className="stat-list" aria-label="Recursos da partida">
               <div><dt><Coins size={17} aria-hidden="true" /><span className="sr-only">Moedas</span></dt><dd>{money}</dd></div>
               <div><dt><Heart size={17} aria-hidden="true" /><span className="sr-only">Vidas</span></dt><dd>{lives}</dd></div>
@@ -55,20 +59,22 @@ export function Battlefield() {
             </dl>
           </div>
           <div className="battle-board">
-            <Scene map={forestMap} runtime={runtime} selectedSlot={selectedSlot} onSelectSlot={selectPosition} onSelectEnemy={inspectEnemy} />
+            <Scene map={map} runtime={runtime} selectedSlot={selectedSlot} onSelectSlot={selectPosition} onSelectEnemy={inspectEnemy} />
             {ended && (
               <div className="board-overlay">
                 <div role="status">
                   <h2>{status === 'victory' ? 'Vitória!' : 'A defesa caiu'}</h2>
-                  <p>{status === 'victory' ? `O bosque está seguro com ${lives} vidas restantes.` : `A última onda alcançada foi a ${wave}.`}</p>
+                  {status === 'victory' && <Stars count={getStarsForLives(lives)} size={23} />}
+                  <p>{status === 'victory' ? `A expedição terminou com ${lives} vidas restantes.` : `A última onda alcançada foi a ${wave}.`}</p>
                   <button className="gold-button" onClick={() => { setPreviewEnemy(null); runtime.restart(); }}><RotateCcw size={15} aria-hidden="true" /> Jogar novamente</button>
+                  <Link href="/#expedicoes" className="overlay-map-link">Voltar às expedições</Link>
                 </div>
               </div>
             )}
           </div>
           <div className="slot-tray" role="group" aria-label="Posições de construção">
             <span>Posições</span>
-            {forestMap.slots.map(({ id }) => (
+            {map.slots.map(({ id }) => (
               <button key={id} type="button" aria-pressed={selectedSlot === id} data-occupied={Boolean(occupiedSlots[id])}
                 aria-label={`Posição ${id.toUpperCase()}${occupiedSlots[id] ? ', ocupada' : ''}`}
                 disabled={ended} onClick={() => selectPosition(id)}>{id}</button>
@@ -89,9 +95,9 @@ export function Battlefield() {
               {enemy.traits.shield && <ElementInfo element={enemy.traits.shield.element} incoming heading="Dano contra o escudo" />}
             </section>
           )}
-          <CreaturesPanel runtime={runtime} game={game} />
+          <CreaturesPanel runtime={runtime} game={game} totalStars={totalStars} />
         </aside>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -1,4 +1,5 @@
 export type Waypoint = readonly [x: number, z: number];
+export type MapId = "forest" | "cave" | "volcano";
 
 export interface TowerSlot {
   readonly id: string;
@@ -6,7 +7,7 @@ export interface TowerSlot {
 }
 
 export interface MapTheme {
-  readonly biome: "forest" | "cave" | "volcano";
+  readonly biome: MapId;
   readonly terrain: string;
   readonly trail: string;
   readonly edge: string;
@@ -15,8 +16,14 @@ export interface MapTheme {
 }
 
 export interface MapDefinition {
-  readonly id: string;
+  readonly id: MapId;
   readonly name: string;
+  readonly nameEn: string;
+  readonly subtitle: string;
+  readonly subtitleEn: string;
+  readonly description: string;
+  readonly descriptionEn: string;
+  readonly difficulty: "intro" | "standard" | "expert";
   readonly size: { readonly width: number; readonly depth: number };
   readonly paths: readonly (readonly Waypoint[])[];
   readonly slots: readonly TowerSlot[];

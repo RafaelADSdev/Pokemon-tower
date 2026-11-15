@@ -1,8 +1,10 @@
 import { memo, useState } from "react";
 import { useCursor } from "@react-three/drei";
-import type { MapDefinition, TowerSlot, Waypoint } from "@/data/maps/types";
-import { Scenery } from "./Scenery";
+import type { MapDefinition, MapTheme, TowerSlot, Waypoint } from "@/data/maps/types";
+import { CavernScenery } from "./CavernScenery";
+import { ForestScenery } from "./Scenery";
 import { Terrain } from "./Terrain";
+import { VolcanoScenery } from "./VolcanoScenery";
 
 interface MapProps {
   map: MapDefinition;
@@ -10,16 +12,25 @@ interface MapProps {
   onSelectSlot?: (id: string) => void;
 }
 
-function BuildPad({ slot, accent, selected, onSelect }: {
+const scenery = { forest: ForestScenery, cave: CavernScenery, volcano: VolcanoScenery };
+
+const padColors = {
+  forest: { stone: "#303c35", brass: "#849481", active: "#67563c" },
+  cave: { stone: "#2c3541", brass: "#8eafbf", active: "#42606a" },
+  volcano: { stone: "#352b2c", brass: "#b39487", active: "#6d4133" },
+};
+
+function BuildPad({ slot, theme, selected, onSelect }: {
   slot: TowerSlot;
-  accent: string;
+  theme: MapTheme;
   selected: boolean;
   onSelect?: (id: string) => void;
 }) {
   const [hovered, setHovered] = useState(false);
   useCursor(hovered);
   const active = selected || hovered;
-  const brass = active ? accent : "#778674";
+  const palette = padColors[theme.biome];
+  const brass = active ? theme.accent : palette.brass;
 
   return (
     <group
@@ -39,7 +50,7 @@ function BuildPad({ slot, accent, selected, onSelect }: {
     >
       <mesh position-y={0.06} receiveShadow>
         <cylinderGeometry args={[0.59, 0.63, 0.13, 8]} />
-        <meshStandardMaterial color={active ? "#67563c" : "#303c35"} roughness={0.92} flatShading />
+        <meshStandardMaterial color={active ? palette.active : palette.stone} roughness={0.92} flatShading />
       </mesh>
       <mesh position-y={0.129} rotation-x={-Math.PI / 2}>
         <ringGeometry args={[0.43, 0.49, 8]} />
@@ -103,6 +114,7 @@ function TrailGate({ waypoint: [x, z], arrival, accent, yaw }: {
 }
 
 const Landscape = memo(function Landscape({ map }: { map: MapDefinition }) {
+  const Biome = scenery[map.theme.biome];
   const unique = new Set<string>();
   const gates: { point: Waypoint; arrival: boolean; key: string }[] = [];
   for (const path of map.paths) {
@@ -119,7 +131,7 @@ const Landscape = memo(function Landscape({ map }: { map: MapDefinition }) {
   return (
     <group>
       <Terrain map={map} />
-      <Scenery map={map} />
+      <Biome map={map} />
       {gates.map(({ point, arrival, key }) => (
         <TrailGate key={key} waypoint={point} arrival={arrival} accent={map.theme.accent} yaw={arrival ? 0.48 : -0.36} />
       ))}
@@ -132,7 +144,7 @@ export function Map({ map, selectedSlot, onSelectSlot }: MapProps) {
     <group>
       <Landscape map={map} />
       {map.slots.map((slot) => (
-        <BuildPad key={slot.id} slot={slot} accent={map.theme.accent} selected={slot.id === selectedSlot} onSelect={onSelectSlot} />
+        <BuildPad key={slot.id} slot={slot} theme={map.theme} selected={slot.id === selectedSlot} onSelect={onSelectSlot} />
       ))}
     </group>
   );
