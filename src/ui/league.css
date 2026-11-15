@@ -105,7 +105,7 @@ a.gym-card:active { transform: translateY(1px); }
 .gym-card[data-locked] { border-top-color: color-mix(in srgb, var(--gym-accent) 62%, var(--league-line)); }
 .gym-card[data-cleared="false"] { box-shadow: 0 .18rem 0 var(--gym-accent); }
 .gym-card-top { display: flex; align-items: center; gap: .48rem; }
-.gym-mark { display: grid; place-items: center; width: 2.25rem; aspect-ratio: 1; flex: 0 0 auto; color: var(--gym-ink); background: var(--gym-tint); border: 1px solid color-mix(in srgb, var(--gym-accent) 37%, white); border-radius: .6rem; }
+.gym-mark { display: grid; place-items: center; width: 3rem; aspect-ratio: 1; flex: 0 0 auto; background: #fff9; border: 1px solid color-mix(in srgb, var(--gym-accent) 37%, white); border-radius: .6rem; }
 .gym-stage { font-size: .78rem; font-weight: 820; color: var(--gym-ink); font-variant-numeric: tabular-nums; }
 .gym-lock, .gym-complete { margin-left: auto; }
 .gym-lock { display: inline-flex; align-items: center; gap: .25rem; color: var(--league-muted); font-size: .67rem; font-weight: 700; }
@@ -178,7 +178,7 @@ a.gym-card:active { transform: translateY(1px); }
 
 @media (max-width: 450px) {
   .gym-grid { grid-template-columns: 1fr; }
-  .gym-card { display: grid; grid-template-columns: 3.15rem minmax(0, 1fr); column-gap: .52rem; }
+  .gym-card { display: grid; grid-template-columns: 3.9rem minmax(0, 1fr); column-gap: .52rem; }
   .gym-card-top { flex-direction: column; align-items: flex-start; gap: .12rem; grid-row: 1 / 3; }
   .gym-lock, .gym-complete { margin-left: 0; }
   .gym-lock { font-size: .59rem; gap: .1rem; }

@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { campaignRegions, finalTournament, type GymExpedition } from '@/data/campaign';
 import { getStarsForLives } from '@/data/progression';
 import { campaignGymTotal, countBadges, isExpeditionUnlocked, type ExpeditionResults } from '@/lib/campaignProgress';
-import { GymEmblem, gymPalette } from './GymEmblem';
+import { GymBadge } from './GymBadge';
+import { gymPalette } from './gymPalette';
 import { useLocale } from './locale';
 import { Stars } from './Stars';
 import { useProgress } from './useProgress';
@@ -17,10 +18,10 @@ function GymCard({ gym, results }: { gym: GymExpedition; results: ExpeditionResu
   const contents = (
     <>
       <div className="gym-card-top">
-        <GymEmblem className="gym-mark" specialty={gym.specialty} size={25} />
+        <span className="gym-mark"><GymBadge badge={gym.badge} size={40} /></span>
         <span className="gym-stage" aria-hidden="true">{gym.order.toString().padStart(2, '0')}</span>
         {!open && <span className="gym-lock"><LockKeyhole size={13} aria-hidden="true" />{t.lockedGym}</span>}
-        {lives > 0 && <BadgeCheck className="gym-complete" size={21} aria-hidden="true" />}
+        {lives > 0 && <Check className="gym-complete" size={21} aria-hidden="true" />}
       </div>
       <div className="gym-card-main">
         <span className="gym-leader">{t.gymLeader(gym.leader)}</span>
@@ -28,7 +29,8 @@ function GymCard({ gym, results }: { gym: GymExpedition; results: ExpeditionResu
         <p><span className="gym-type">{language === 'en' ? gym.typeEn : gym.type}</span><span>{t.waveCount(gym.waves.length)}</span></p>
       </div>
       <div className="gym-card-end">
-        {lives > 0 ? <Stars count={getStarsForLives(lives)} size={14} /> : <span className="gym-badge-name">{t.badge(gym.badge)}</span>}
+        <span className="gym-badge-name">{t.badge(gym.badge)}</span>
+        {lives > 0 && <Stars count={getStarsForLives(lives)} size={14} />}
         {open && <span className="gym-action">{lives ? t.clearedGym : t.unlockedGym}<ArrowRight size={15} aria-hidden="true" /></span>}
       </div>
     </>

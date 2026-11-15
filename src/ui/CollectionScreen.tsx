@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, ArrowUpRight, Badge, BadgeCheck, LockKeyhole, Star } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Check, LockKeyhole, Star } from 'lucide-react';
 import { useState } from 'react';
 import { campaignRegions } from '@/data/campaign';
 import { creatureRoles, getCreatureAppearance } from '@/data/creatures';
@@ -10,6 +10,7 @@ import { elementById } from '@/data/elements';
 import { getCreatureUnlockStars } from '@/data/progression';
 import { regionalRosters } from '@/data/regionalCreatures';
 import { ElementTag } from './ElementInfo';
+import { GymBadge } from './GymBadge';
 import { useLocale } from './locale';
 import { SiteHeader } from './SiteHeader';
 import { useProgress } from './useProgress';
@@ -36,8 +37,14 @@ export function CollectionScreen() {
         <ul className="badge-case" aria-label={t.badgeCount(region.gyms.filter(({ id }) => expeditionResults[id]).length, region.gyms.length)}>
           {region.gyms.map((gym) => {
             const earned = Boolean(expeditionResults[gym.id]);
-            const Icon = earned ? BadgeCheck : Badge;
-            return <li key={gym.id} data-earned={earned}><Icon size={17} aria-hidden="true" /><span>{t.badge(gym.badge)}</span><span className="sr-only">{earned ? t.clearedGym : t.lockedGym}</span></li>;
+            return (
+              <li key={gym.id} data-earned={earned}>
+                <span className="badge-case-art"><GymBadge badge={gym.badge} size={26} /></span>
+                <span>{t.badge(gym.badge)}</span>
+                {earned && <Check size={14} aria-hidden="true" />}
+                <span className="sr-only">{earned ? t.clearedGym : t.lockedGym}</span>
+              </li>
+            );
           })}
         </ul>
         <div className="collection-grid">

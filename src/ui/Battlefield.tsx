@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, BadgeCheck, Coins, Flag, Heart, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Coins, Flag, Heart, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useStore } from 'zustand';
 import { playSound } from '@/audio/audio';
@@ -17,6 +17,7 @@ import { isExpeditionUnlocked, nextGym } from '@/lib/campaignProgress';
 import { BattleControls } from './BattleControls';
 import { CreaturesPanel } from './CreaturesPanel';
 import { ElementGlyph, ElementInfo, ElementTag } from './ElementInfo';
+import { GymBadge } from './GymBadge';
 import { SiteHeader } from './SiteHeader';
 import { Stars } from './Stars';
 import { useLocale } from './locale';
@@ -127,7 +128,12 @@ export function Battlefield({ map, expedition }: { map: MapDefinition; expeditio
                 <div role="status">
                   <h2>{status === 'victory' ? (expedition?.kind === 'tournament' ? t.championTitle : t.victory) : t.defeat}</h2>
                   {status === 'victory' && <Stars count={getStarsForLives(lives)} size={23} />}
-                  {status === 'victory' && gym && <span className="badge-earned"><BadgeCheck size={16} aria-hidden="true" /> {t.badgeEarned(gym.badge)}</span>}
+                  {status === 'victory' && gym && (
+                    <div className="badge-earned">
+                      <span className="badge-earned-art"><GymBadge badge={gym.badge} size={40} /></span>
+                      <span>{t.badgeEarned(gym.badge)}</span>
+                    </div>
+                  )}
                   <p>{status === 'victory' ? t.victoryResult(lives) : t.defeatResult(wave)}</p>
                   {status === 'victory' && canPlayNext && <Link className="gold-button" href={`/expeditions/${next.id}`}>{t.nextGym} <ArrowRight size={15} aria-hidden="true" /></Link>}
                   {status === 'victory' && canPlayFinal && <Link className="gold-button" href={`/expeditions/${finalTournament.id}`}>{t.enterTournament} <ArrowRight size={15} aria-hidden="true" /></Link>}

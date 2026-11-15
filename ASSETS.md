@@ -12,11 +12,18 @@ Os modelos, as ilustrações, os cenários e o áudio originais de Pokémon Towe
 | `public/images/league/{kanto,johto,hoenn}.webp` | Panoramas originais da seleção de regiões criados com o ImageGen da OpenAI e recortados de uma prancha de três faixas. [Prompt registrado](DECISIONS.md) | [CC0 1.0][cc0] |
 | GLBs remotos de Pokémon | [Pokémon 3D API Assets][pokemon-assets], revisão `429de1288cea0d43f5b4f56305d2276e94239d65` | Direitos dos respectivos titulares de Pokémon. [Aviso do fornecedor][pokemon-rights] |
 | `public/images/pokemon/*.webp` e `src/app/icon.png` | Retratos, poses de menu e ícone renderizados dos mesmos GLBs de Pokémon | Direitos dos respectivos titulares de Pokémon. [Aviso do fornecedor][pokemon-rights] |
+| `public/images/badges/*.png` | Insígnias das ligas de Kanto, Johto e Hoenn. [Catálogo de insígnias][pokemon-badges] | Direitos dos respectivos titulares de Pokémon |
 | `public/audio/forest.mp3`, `cave.mp3`, `volcano.mp3` | Três trilhas instrumentais originais para floresta, caverna e vulcão, compostas e sintetizadas por [scripts/generate-audio.py](scripts/generate-audio.py) | [CC0 1.0][cc0] |
 | `public/audio/{boss,death,defeat,impact,leak,pause,place,sell,shot,ui,upgrade,victory,wave}.mp3` | Treze efeitos originais sintetizados por [scripts/generate-audio.py](scripts/generate-audio.py) | [CC0 1.0][cc0] |
 | DM Serif Text | `@fontsource/dm-serif-text` com licença no pacote. [Fontsource][dm] | [SIL OFL 1.1][ofl] |
 | Instrument Sans variável | `@fontsource-variable/instrument-sans` com licença no pacote. [Fontsource][instrument] | [SIL OFL 1.1][ofl] |
 | Ícones de interface e glifos dos elementos | `lucide-react` com avisos de licença no pacote. [Lucide][lucide] | ISC, com MIT para ícones derivados de Feather |
+
+## Insígnias de ginásio
+
+- Kanto usa os ícones de Pokémon: Let's Go, Pikachu! e Let's Go, Eevee! com as margens transparentes aparadas. [Arquivo de sprites de Let's Go][pokemon-badges-kanto]
+- Johto usa as insígnias do curta de Murkrow da série POKÉTOON. [Curta oficial][pokemon-badges-poketoon] · [Imagens individuais no WikiDex][pokemon-badges-johto]
+- Hoenn usa a arte de Pokémon Global Link catalogada pelo [PokéWiki][pokemon-badges-pokewiki] e pelos [Arquivos Bulbagarden][pokemon-badges-hoenn].
 
 ## Modelos GLB de Pokémon
 
@@ -46,3 +53,9 @@ As faixas são estéreo e têm aproximadamente 19, 23 e 17 segundos. O áudio co
 [pokemon-assets]: https://github.com/Pokemon-3D-api/assets/tree/429de1288cea0d43f5b4f56305d2276e94239d65/models/opt/regular
 [pokemon-credits]: https://github.com/Pokemon-3D-api/assets#%EF%B8%8F-license--credits
 [pokemon-rights]: https://github.com/Pokemon-3D-api/api-server/blob/main/docs/COPYRIGHT.md
+[pokemon-badges]: https://bulbapedia.bulbagarden.net/wiki/Badge#List_of_badges
+[pokemon-badges-kanto]: https://pokeamice.com/2022/08/30/lgpe-unpack/
+[pokemon-badges-johto]: https://www.wikidex.net/wiki/Categor%C3%ADa:Ilustraciones_de_medallas_de_Johto
+[pokemon-badges-hoenn]: https://archives.bulbagarden.net/wiki/File:Stone_Badge.png
+[pokemon-badges-pokewiki]: https://www.pokewiki.de/Orden#Hoenn
+[pokemon-badges-poketoon]: https://www.youtube.com/watch?v=AuAY3MqTEpg
