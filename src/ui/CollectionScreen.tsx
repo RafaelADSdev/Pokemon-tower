@@ -2,19 +2,24 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowLeft, ArrowUpRight, LockKeyhole, Star } from 'lucide-react';
-import { creatures, creatureRoles } from '@/data/creatures';
+import { ArrowLeft, ArrowUpRight, Badge, BadgeCheck, LockKeyhole, Star } from 'lucide-react';
+import { useState } from 'react';
+import { campaignRegions } from '@/data/campaign';
+import { creatureRoles } from '@/data/creatures';
 import { elementById } from '@/data/elements';
 import { getCreatureUnlockStars } from '@/data/progression';
+import { regionalRosters } from '@/data/regionalCreatures';
 import { ElementTag } from './ElementInfo';
 import { useLocale } from './locale';
 import { SiteHeader } from './SiteHeader';
 import { useProgress } from './useProgress';
 
 export function CollectionScreen() {
-  const { totalStars } = useProgress();
+  const { expeditionResults, totalStars } = useProgress();
   const { t, localized, describe } = useLocale();
-  const unlocked = creatures.filter(({ id }) => totalStars >= getCreatureUnlockStars(id)).length;
+  const [region, setRegion] = useState(campaignRegions[0]);
+  const roster = regionalRosters[region.id];
+  const unlocked = roster.filter(({ id }) => totalStars >= getCreatureUnlockStars(id)).length;
 
   return (
     <>
@@ -22,11 +27,21 @@ export function CollectionScreen() {
       <main className="collection-shell">
         <Link href="/#expedicoes" className="back-link"><ArrowLeft size={15} aria-hidden="true" /> {t.expeditions}</Link>
         <div className="section-heading collection-heading">
-          <div><h1>{t.collection}</h1><p>{t.availableCreatures(unlocked, creatures.length)}</p></div>
+          <div><h1>{t.collection}</h1><p>{t.availableCreatures(unlocked, roster.length)}</p></div>
           <span className="collection-stars"><Star size={18} fill="currentColor" aria-hidden="true" /> {t.stars(totalStars)}</span>
         </div>
+        <div className="collection-regions" role="group" aria-label={t.chooseRegion}>
+          {campaignRegions.map((option) => <button key={option.id} className="quiet-button" aria-pressed={option.id === region.id} type="button" onClick={() => setRegion(option)}>{localized(option)}</button>)}
+        </div>
+        <ul className="badge-case" aria-label={t.badgeCount(region.gyms.filter(({ id }) => expeditionResults[id]).length, region.gyms.length)}>
+          {region.gyms.map((gym) => {
+            const earned = Boolean(expeditionResults[gym.id]);
+            const Icon = earned ? BadgeCheck : Badge;
+            return <li key={gym.id} data-earned={earned}><Icon size={17} aria-hidden="true" /><span>{t.badge(gym.badge)}</span><span className="sr-only">{earned ? t.clearedGym : t.lockedGym}</span></li>;
+          })}
+        </ul>
         <div className="collection-grid">
-          {creatures.map((creature) => {
+          {roster.map((creature) => {
             const required = getCreatureUnlockStars(creature.id);
             const locked = totalStars < required;
             return (

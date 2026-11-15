@@ -1,6 +1,6 @@
 import { ArrowUp, Coins, Crosshair, LockKeyhole, Sprout } from 'lucide-react';
 import Image from 'next/image';
-import { creatures, creatureRoles, targetPriorities, type TargetPriority } from '@/data/creatures';
+import { creatureRoles, targetPriorities, type TargetPriority } from '@/data/creatures';
 import { getCreatureUnlockStars } from '@/data/progression';
 import { gameRules } from '@/data/rules';
 import type { GameRuntime } from '@/game/runtime';
@@ -62,7 +62,7 @@ export function CreaturesPanel({ runtime, game, totalStars }: { runtime: GameRun
       <div className="panel-heading"><h2 id="recruit-title"><Sprout size={18} aria-hidden="true" /> {t.creatures}</h2>{position && <span>{position}</span>}</div>
       <p className="panel-copy" role="status">{position ? t.pickCreature : t.pickPosition}</p>
       <div className="recruit-list">
-        {creatures.map((creature) => {
+        {runtime.roster.map((creature) => {
           const required = getCreatureUnlockStars(creature.id);
           const locked = totalStars < required;
           return (

@@ -1,6 +1,6 @@
-# Critter Defense
+# Pokémon Tower League
 
-Tower defense 3D de fã para navegador. Três expedições de 30 ondas, oito Pokémon jogáveis com evolução, dez espécies inimigas e uma coleção que guarda os desbloqueios neste navegador.
+Tower defense 3D de fã para navegador. Desafie 24 ginásios em Kanto, Johto e Hoenn, monte equipes de Pokémon nativos e conquiste as insígnias para entrar no Torneio Final.
 
 ## Rodar localmente
 
@@ -11,23 +11,29 @@ pnpm install
 pnpm dev
 ```
 
-Abra [Critter Defense local](http://localhost:3000). Para testar a versão de produção, rode `pnpm build` e `pnpm start`.
+Abra [Pokémon Tower League local](http://localhost:3000). Para testar a versão de produção, rode `pnpm build` e `pnpm start`.
 
 O navegador carrega os modelos 3D conforme a partida precisa deles. As malhas provisórias do jogo permitem jogar enquanto os GLBs estão em trânsito ou quando o serviço de modelos está indisponível. [Pokémon 3D API Assets](https://github.com/Pokemon-3D-api/assets)
 
 ## Jogar
 
-- Escolha uma expedição. Selecione um espaço `+` no tabuleiro ou um botão de posição abaixo dele e implante uma criatura com as moedas iniciais.
+- Escolha uma região e desafie o primeiro ginásio. Cada vitória conquista a insígnia do ginásio e libera o próximo da mesma região. As três regiões podem ser iniciadas em qualquer ordem.
+- Selecione um espaço `+` no tabuleiro ou um botão de posição abaixo dele e implante um Pokémon com as moedas iniciais. A loja oferece oito famílias nativas da região em jogo.
 - Inicie a onda. As criaturas atacam automaticamente, e você recebe moedas por derrotar inimigos e concluir ondas. Você pode chamar a próxima enquanto a atual ainda está em andamento.
 - Selecione uma torre para melhorar, evoluir no nível 3, mudar a prioridade ou vender por 70% do total investido. A prévia da onda também permite inspecionar as fraquezas dos inimigos.
 - Arraste para mover a câmera. Use a roda do mouse ou o gesto de pinça para ajustar o zoom. No teclado, `N` chama a próxima onda, `Espaço` pausa ou retoma, `1` a `3` alteram a velocidade e `Esc` limpa a seleção.
-- Você ganha 1 estrela ao vencer, 2 com pelo menos 8 vidas e 3 com pelo menos 16 vidas. O melhor resultado por mapa conta para liberar criaturas na Coleção.
+- Você ganha 1 estrela ao vencer, 2 com pelo menos 8 vidas e 3 com pelo menos 16 vidas. O melhor resultado de cada expedição conta para desbloquear Pokémon da Coleção. Insígnias e estrelas são guardadas no navegador.
+- Com as 24 insígnias, o Torneio Final reúne adversários das três regiões em 16 ondas numa arena de duas rotas.
+
+Os tabuleiros clássicos permanecem acessíveis em `/play`, `/play/cave` e `/play/volcano`. A campanha usa variantes desses três terrenos, com trilhas, cores e ondas adaptadas aos ginásios. [Referências de Kanto](https://pokemonletsgo.pokemon.com/en-ca/kanto-region/) · [Johto](https://www.pokemon.com/uk/features/a-visitors-guide-to-johto) · [Hoenn](https://www.pokemon.com/br/destaques/relembrando-a-regiao-hoenn-em-destaque)
 
 ## Editar conteúdo
 
 | Conteúdo | Onde editar |
 | --- | --- |
 | Nome do jogo | `src/config/brand.ts` |
+| Ginásios e torneio | Edite líderes, insígnias e temas em `src/data/campaign/gyms.ts`. As curvas de ondas estão em `src/data/campaign/waves.ts`. Os adversários nativos e chefes estão em `src/data/regionEnemies.ts`. |
+| Equipes regionais | Edite `src/data/regionalCreatures.ts`. Cada família regional usa o custo e as habilidades do papel tático correspondente. |
 | Criaturas | Adicione uma entrada em `src/data/creatures.ts` com ID único, textos `name`/`nameEn` e `description`/`descriptionEn`, elemento, papel, atributos, alvos, dois upgrades e evolução. Defina a exigência de estrelas em `src/data/progression.ts`. |
 | Inimigos | Adicione uma entrada em `src/data/enemies.ts` com vida, velocidade, recompensa, elemento e traços. Um inimigo dividido aponta para outro ID desse catálogo. |
 | Elementos e atributos globais | Edite as vantagens em `src/data/elements.ts`, os recursos e escalas em `src/data/rules.ts` e o empilhamento em `src/data/status.ts`. |
@@ -45,7 +51,7 @@ pnpm test
 pnpm build
 ```
 
-Os testes incluem uma vitória completa na onda 30 de cada mapa com as criaturas iniciais, além de bifurcação determinística, ondas sobrepostas, economia, efeitos, dano e progressão.
+Os testes incluem vitórias nos 24 ginásios e nas 16 ondas do Torneio Final com as equipes da campanha. Também verificam o desbloqueio de ginásios por insígnias, os elencos regionais, os mapas clássicos e as regras de combate.
 
 ### Benchmark com 300 inimigos
 

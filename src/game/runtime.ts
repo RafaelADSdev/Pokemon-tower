@@ -1,5 +1,5 @@
 import type { StoreApi } from 'zustand';
-import { creatureById, getCreatureStats, starterCreature, targetPriorities } from '@/data/creatures';
+import { creatureById, creatures, getCreatureStats, starterCreature, targetPriorities, type CreatureDefinition } from '@/data/creatures';
 import { enemyById, type EnemyDefinition } from '@/data/enemies';
 import type { MapDefinition } from '@/data/maps/types';
 import { gameRules } from '@/data/rules';
@@ -29,6 +29,7 @@ const FLYING_HEIGHT = 1.25;
 
 export interface RuntimeOptions {
   waves?: readonly WaveDefinition[];
+  roster?: readonly CreatureDefinition[];
   store?: StoreApi<GameState>;
   seed?: number;
   canUseCreature?: (id: string) => boolean;
@@ -41,6 +42,10 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
   const clock = createGameClock();
   const store = options.store ?? createGameStore();
   const definitions = options.waves ?? getMapWaves(map.id);
+  const roster = options.roster ?? creatures;
+  const recruits: Readonly<Partial<Record<string, CreatureDefinition>>> = options.roster
+    ? Object.fromEntries(roster.map((creature) => [creature.id, creature]))
+    : creatureById;
   const paths = map.paths.map(compilePath);
   const airPaths = paths.map(({ waypoints }) => compilePath([waypoints[0], waypoints[waypoints.length - 1]]));
   if (!paths.length) throw new Error(`Map ${map.id} has no path`);
@@ -141,6 +146,7 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
     store,
     queries,
     waves: definitions,
+    roster,
     subscribeAudio: feedback.subscribe,
     advance(deltaSeconds: number) {
       if (!activeWaves.length && !queries.effects.entities.length) return alpha;
@@ -172,7 +178,7 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
       if (paused || (status !== 'ready' && status !== 'running') || Object.hasOwn(occupiedSlots, slotId)) return false;
 
       const slot = map.slots.find(({ id }) => id === slotId);
-      const definition = Object.hasOwn(creatureById, creatureId) ? creatureById[creatureId] : undefined;
+      const definition = Object.hasOwn(recruits, creatureId) ? recruits[creatureId] : undefined;
       if (!slot || !definition || money < definition.cost || options.canUseCreature?.(definition.id) === false) return false;
 
       const [x, z] = slot.position;

@@ -1,7 +1,7 @@
 export const brand = {
-  name: 'Critter Defense',
+  name: 'Pokémon Tower League',
   creature: 'Pokémon',
   creatures: 'Pokémon',
   creaturesEn: 'Pokémon',
-  description: 'Defenda o caminho com Pokémon em um tower defense 3D de fã.',
+  description: 'Conquiste as insígnias de Kanto, Johto e Hoenn e dispute o Torneio Final em um tower defense 3D de fã.',
 } as const;

@@ -1,5 +1,6 @@
 import type { ElementId } from "./elements";
 import { pokemonAppearance } from "./pokemon";
+import { regionalEnemies } from "./regionEnemies";
 
 export interface EnemyTraits {
   readonly flying?: boolean;
@@ -177,6 +178,7 @@ export const enemies: readonly EnemyDefinition[] = [
     visual: "ashdrummer",
     traits: { boss: { kind: "haste", radius: 4.4, strength: 0.38, interval: 4.1, duration: 2.8 } },
   },
+  ...regionalEnemies,
 ];
 
 export const enemyById: Readonly<Partial<Record<string, EnemyDefinition>>> =

@@ -1,6 +1,6 @@
 # Assets e licenças
 
-Os modelos, as ilustrações, os cenários e o áudio originais de Critter Defense são disponibilizados sob [CC0 1.0 Universal][cc0]. As dependências visuais de terceiros mantêm suas licenças abaixo.
+Os modelos, as ilustrações, os cenários e o áudio originais de Pokémon Tower League são disponibilizados sob [CC0 1.0 Universal][cc0]. As dependências visuais de terceiros mantêm suas licenças abaixo.
 
 | Asset | Origem | Licença |
 | --- | --- | --- |
@@ -19,9 +19,9 @@ Os modelos, as ilustrações, os cenários e o áudio originais de Critter Defen
 
 ## Modelos GLB de Pokémon
 
-O jogo carrega individualmente os 26 GLBs otimizados do catálogo `models/opt/regular` pelo GitHub Raw. O catálogo do jogo associa as oito torres às suas formas iniciais e evoluídas e define dez espécies para as ondas. Os IDs internos do jogo continuam sendo usados nos arquivos de ondas e nas regras de desbloqueio. [Revisão usada][pokemon-assets]
+O jogo carrega os GLBs otimizados do catálogo `models/opt/regular` pelo GitHub Raw conforme a partida precisa deles. A campanha acrescenta 65 definições de adversários regionais e 17 famílias adicionais de torres. Os IDs internos do jogo continuam sendo usados nos arquivos de ondas e nas regras de desbloqueio. [Revisão usada][pokemon-assets]
 
-Os arquivos somam 1,81 MB e usam compressão Draco. Os limites observados são 6.346 triângulos por forma jogável e 2.908 por inimigo. As partes dos inimigos são instanciadas por malha para preservar suas texturas e materiais.
+Os arquivos usam compressão Draco. As partes dos inimigos são instanciadas por malha para preservar suas texturas e materiais. Onix e Misdreavus ultrapassam 10 mil triângulos e aparecem como chefes individuais de ginásio.
 
 O repositório informa que os modelos pertencem a Nintendo, Creatures Inc. e GAME FREAK inc. A licença MIT do projeto cobre código e documentação. [Créditos do repositório][pokemon-credits] · [Aviso de direitos autorais][pokemon-rights]
 

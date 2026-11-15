@@ -2,15 +2,18 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { ArrowLeft, Coins, Flag, Heart, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BadgeCheck, Coins, Flag, Heart, RotateCcw, Volume2, VolumeX, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useStore } from 'zustand';
 import { playSound } from '@/audio/audio';
-import type { EnemyDefinition } from '@/data/enemies';
+import { campaignRegions, finalTournament, type CampaignExpedition } from '@/data/campaign';
+import { enemyById, type EnemyDefinition } from '@/data/enemies';
 import type { MapDefinition } from '@/data/maps/types';
 import { getStarsForLives } from '@/data/progression';
+import { regionalRosters, tournamentRoster } from '@/data/regionalCreatures';
 import { createGameRuntime } from '@/game/runtime';
 import type { EnemyEntity } from '@/game/ecs/world';
+import { isExpeditionUnlocked, nextGym } from '@/lib/campaignProgress';
 import { BattleControls } from './BattleControls';
 import { CreaturesPanel } from './CreaturesPanel';
 import { ElementGlyph, ElementInfo, ElementTag } from './ElementInfo';
@@ -18,7 +21,7 @@ import { SiteHeader } from './SiteHeader';
 import { Stars } from './Stars';
 import { useLocale } from './locale';
 import { useBattleAudio } from './useBattleAudio';
-import { canRecruitCreature, recordVictory, useProgress } from './useProgress';
+import { canRecruitCreature, recordExpeditionVictory, recordVictory, useProgress } from './useProgress';
 
 const Scene = dynamic(() => import('@/render/Scene').then((module) => module.Scene), {
   ssr: false,
@@ -30,20 +33,31 @@ function BoardLoading() {
   return <p role="status" className="board-loading">{t.loading}</p>;
 }
 
-export function Battlefield({ map }: { map: MapDefinition }) {
-  const [runtime] = useState(() => createGameRuntime(map, { canUseCreature: canRecruitCreature }));
+export function Battlefield({ map, expedition }: { map: MapDefinition; expedition?: CampaignExpedition }) {
+  const [runtime] = useState(() => createGameRuntime(map, {
+    canUseCreature: canRecruitCreature,
+    waves: expedition?.waves,
+    roster: expedition?.kind === 'gym' ? regionalRosters[expedition.regionId] : expedition && tournamentRoster,
+  }));
   const game = useStore(runtime.store);
   const { t, localized, describe } = useLocale();
   const { muted, toggleMuted } = useBattleAudio(runtime, map.id);
-  const { totalStars } = useProgress();
+  const { totalStars, expeditionResults } = useProgress();
   const [previewEnemy, setPreviewEnemy] = useState<EnemyDefinition | null>(null);
   const { money, lives, wave, maxWaves, selectedSlot, selectSlot, occupiedSlots, selectedEnemyId, status } = game;
   const enemy = selectedEnemyId === null ? previewEnemy : runtime.getEnemy(selectedEnemyId)?.enemy.definition;
   const ended = status === 'victory' || status === 'defeat';
+  const gym = expedition?.kind === 'gym' ? expedition : undefined;
+  const region = gym && campaignRegions.find(({ id }) => id === gym.regionId);
+  const next = gym && nextGym(gym);
+  const canPlayNext = next && isExpeditionUnlocked(next, expeditionResults);
+  const canPlayFinal = gym && !next && isExpeditionUnlocked(finalTournament, expeditionResults);
 
   useEffect(() => {
-    if (status === 'victory') recordVictory(map.id, lives);
-  }, [status, map.id, lives]);
+    if (status !== 'victory') return;
+    if (expedition) recordExpeditionVictory(expedition.id, lives);
+    else recordVictory(map.id, lives);
+  }, [status, expedition, map.id, lives]);
 
   useEffect(() => {
     function onKeydown(event: KeyboardEvent) {
@@ -95,7 +109,11 @@ export function Battlefield({ map }: { map: MapDefinition }) {
       <main className="battle-layout">
         <section className="battle-main" aria-labelledby="map-name">
           <div className="battle-title">
-            <div><Link href="/#expedicoes" className="back-link battle-back"><ArrowLeft size={13} aria-hidden="true" /> {t.expeditions}</Link><h1 id="map-name">{localized(map)}</h1></div>
+            <div>
+              <Link href="/#expedicoes" className="back-link battle-back"><ArrowLeft size={13} aria-hidden="true" /> {t.expeditions}</Link>
+              <h1 id="map-name">{localized(map)}</h1>
+              {region && gym && <p className="battle-gym-context">{localized(region)} · {t.gymLeader(gym.leader)} · {t.badge(gym.badge)}</p>}
+            </div>
             <dl className="stat-list" aria-label={t.resources}>
               <div><dt><Coins size={17} aria-hidden="true" /><span className="sr-only">{t.coins}</span></dt><dd>{money}</dd></div>
               <div><dt><Heart size={17} aria-hidden="true" /><span className="sr-only">{t.lives}</span></dt><dd>{lives}</dd></div>
@@ -107,10 +125,13 @@ export function Battlefield({ map }: { map: MapDefinition }) {
             {ended && (
               <div className="board-overlay">
                 <div role="status">
-                  <h2>{status === 'victory' ? t.victory : t.defeat}</h2>
+                  <h2>{status === 'victory' ? (expedition?.kind === 'tournament' ? t.championTitle : t.victory) : t.defeat}</h2>
                   {status === 'victory' && <Stars count={getStarsForLives(lives)} size={23} />}
+                  {status === 'victory' && gym && <span className="badge-earned"><BadgeCheck size={16} aria-hidden="true" /> {t.badgeEarned(gym.badge)}</span>}
                   <p>{status === 'victory' ? t.victoryResult(lives) : t.defeatResult(wave)}</p>
-                  <button className="gold-button" onClick={() => { setPreviewEnemy(null); runtime.restart(); }}><RotateCcw size={15} aria-hidden="true" /> {t.replay}</button>
+                  {status === 'victory' && canPlayNext && <Link className="gold-button" href={`/expeditions/${next.id}`}>{t.nextGym} <ArrowRight size={15} aria-hidden="true" /></Link>}
+                  {status === 'victory' && canPlayFinal && <Link className="gold-button" href={`/expeditions/${finalTournament.id}`}>{t.enterTournament} <ArrowRight size={15} aria-hidden="true" /></Link>}
+                  <button className={status === 'victory' && (canPlayNext || canPlayFinal) ? 'quiet-button' : 'gold-button'} onClick={() => { setPreviewEnemy(null); runtime.restart(); }}><RotateCcw size={15} aria-hidden="true" /> {t.replay}</button>
                   <Link href="/#expedicoes" className="overlay-map-link">{t.backToMaps}</Link>
                 </div>
               </div>
@@ -130,6 +151,15 @@ export function Battlefield({ map }: { map: MapDefinition }) {
         </section>
         <aside className="battle-aside" aria-label={t.commands}>
           <BattleControls runtime={runtime} game={game} onInspect={(definition) => { game.selectEnemy(null); setPreviewEnemy(definition); }} />
+          {expedition && !ended && (
+            <div className="featured-enemies" aria-label={t.featuredPokemon}>
+              <span>{t.featuredPokemon}</span>
+              {expedition.featuredEnemies.map((id) => {
+                const definition = enemyById[id];
+                return definition && <button type="button" key={id} onClick={() => { game.selectEnemy(null); setPreviewEnemy(definition); }}><ElementGlyph size={13} element={definition.element} />{localized(definition)}</button>;
+              })}
+            </div>
+          )}
           {enemy && !ended && (
             <section className="battle-panel" aria-labelledby="enemy-name">
               <div className="panel-heading">
