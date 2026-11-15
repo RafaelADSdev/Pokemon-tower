@@ -1,7 +1,9 @@
-import { Suspense, useEffect, useMemo, type ReactNode } from "react";
+import { Suspense, useEffect, useMemo, type ReactNode, type RefObject } from "react";
 import { useAnimations, useGLTF } from "@react-three/drei";
-import { Mesh, type AnimationClip, type Group, type Matrix4, type Object3D } from "three";
+import { useFrame } from "@react-three/fiber";
+import { Bone, Mesh, Quaternion, Vector3, type AnimationClip, type Group, type Matrix4, type Object3D } from "three";
 import { useStore } from "zustand";
+import type { ElementId } from "@/data/elements";
 import { enemyById } from "@/data/enemies";
 import type { WaveDefinition } from "@/data/waves/types";
 import type { GameRuntime } from "@/game/runtime";
@@ -12,6 +14,19 @@ import { fitEnemyModel, prepareTowerModel, type ModelPart } from "./modelFit";
 export interface InstancedAsset {
   parts: readonly ModelPart[];
   localTransform?: Matrix4;
+}
+
+export interface AttackPose {
+  charge: number;
+  release: number;
+}
+
+interface TowerMotionProps {
+  idlePose?: string;
+  attackPose: RefObject<AttackPose>;
+  element: ElementId;
+  reducedMotion: boolean;
+  paused: boolean;
 }
 
 export function collectEnemyTypes(waves: readonly WaveDefinition[]) {
@@ -56,12 +71,43 @@ export function LoadingModel({ children, fallback }: { children: ReactNode; fall
   );
 }
 
-function FittedTower({ scene, clips, idlePose, reducedMotion, paused }: {
+function useAttackRig(model: Object3D, pose: RefObject<AttackPose>, element: ElementId, animated: boolean) {
+  const scratch = useMemo(() => new Quaternion(), []);
+  const rig = useMemo(() => {
+    if (animated) return [];
+    const bones: Bone[] = [];
+    model.traverse((node) => { if (node instanceof Bone) bones.push(node); });
+    const bind = (match: RegExp, axis: Vector3, charge: number, release: number) => {
+      const bone = bones.find(({ name }) => match.test(name));
+      if (!bone?.parent) return [];
+      const inverseParent = bone.parent.getWorldQuaternion(new Quaternion()).invert();
+      return [{ bone, rest: bone.quaternion.clone(), axis: axis.applyQuaternion(inverseParent), charge, release }];
+    };
+    return [
+      ...bind(/^(?:\d+\s+)?head(?:_\d+)?$/i, new Vector3(1, 0, 0), -0.14, 0.18),
+      ...bind(/^tail1?(?:_\d+)?$/i, new Vector3(0, 1, 0), -0.10, 0.16),
+      ...(element === "brasa" || element === "mare"
+        ? bind(/^(?:\d+\s+)?jaw(?:_\d+)?$/i, new Vector3(1, 0, 0), 0, 0.23)
+        : []),
+    ];
+  }, [animated, element, model]);
+
+  useFrame(() => {
+    const { charge, release } = pose.current;
+    for (const joint of rig) {
+      const angle = joint.charge * charge + joint.release * release;
+      joint.bone.quaternion.copy(joint.rest).premultiply(scratch.setFromAxisAngle(joint.axis, angle));
+    }
+  });
+
+  useEffect(() => () => {
+    for (const { bone, rest } of rig) bone.quaternion.copy(rest);
+  }, [rig]);
+}
+
+function FittedTower({ scene, clips, idlePose, attackPose, element, reducedMotion, paused }: TowerMotionProps & {
   scene: Group;
   clips: AnimationClip[];
-  idlePose?: string;
-  reducedMotion: boolean;
-  paused: boolean;
 }) {
   const fixedPose = idlePose ? clips.find(({ name }) => name === idlePose) : undefined;
   const { model, offset, scale } = useMemo(() => prepareTowerModel(scene, fixedPose), [scene, fixedPose]);
@@ -71,6 +117,7 @@ function FittedTower({ scene, clips, idlePose, reducedMotion, paused }: {
   }, [clips, fixedPose, reducedMotion]);
   const { actions } = useAnimations(idleClips, model);
   const clipName = idleClips[0]?.name;
+  useAttackRig(model, attackPose, element, reducedMotion || Boolean(clipName));
 
   useEffect(() => {
     if (!clipName) return;
@@ -92,14 +139,14 @@ function FittedTower({ scene, clips, idlePose, reducedMotion, paused }: {
   );
 }
 
-export function TowerAsset({ path, idlePose, reducedMotion, paused }: { path: string; idlePose?: string; reducedMotion: boolean; paused: boolean }) {
+export function TowerAsset({ path, ...motion }: TowerMotionProps & { path: string }) {
   const { nodes, scene, animations } = useGLTF(path);
   const model = generatedMesh(path, nodes);
   if (model) {
     model.updateWorldMatrix(true, false);
     return <mesh geometry={model.geometry} material={model.material} matrix={model.matrixWorld} matrixAutoUpdate={false} castShadow />;
   }
-  return <FittedTower scene={scene} clips={animations} idlePose={idlePose} reducedMotion={reducedMotion} paused={paused} />;
+  return <FittedTower scene={scene} clips={animations} {...motion} />;
 }
 
 function generatedMesh(path: string, nodes: Record<string, Object3D>) {

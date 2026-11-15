@@ -1,5 +1,7 @@
 import { Howl, Howler } from "howler";
+import type { ElementId } from "@/data/elements";
 import type { MapId } from "@/data/maps/types";
+import { playAttackCue, preloadAttackSounds, stopAttackSounds, type AttackSoundPhase } from "./attackSounds";
 
 const cues = {
   ui: { volume: 0.32, interval: 65 },
@@ -44,6 +46,7 @@ export function unlockAudio() {
   unlocked = true;
   Howler.mute(muted);
   void Howler.ctx?.resume().catch(() => {});
+  if (!muted) preloadAttackSounds();
   updateMusic();
 }
 
@@ -51,12 +54,19 @@ export function setAudioMuted(nextMuted: boolean) {
   muted = nextMuted;
   if (!unlocked) return;
   Howler.mute(muted);
+  if (muted) stopAttackSounds();
+  else preloadAttackSounds();
   updateMusic();
 }
 
 export function playMapMusic(mapId: MapId | null) {
   requestedMap = mapId;
   updateMusic();
+}
+
+export function playAttackSound(element: ElementId, phase: AttackSoundPhase) {
+  if (!unlocked || muted) return;
+  playAttackCue(element, phase);
 }
 
 export function playSound(cue: AudioCue) {

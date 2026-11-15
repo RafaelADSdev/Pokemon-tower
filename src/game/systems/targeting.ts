@@ -1,6 +1,8 @@
 import type { CreatureDefinition } from '@/data/creatures';
 import type { EnemyEntity, TargetPriority, TowerEntity } from '../ecs/world';
 
+export const ATTACK_WINDUP_SECONDS = 0.16;
+
 export function canHitTarget(target: EnemyEntity, targets: CreatureDefinition['targets']) {
   return !target.enemy.escaped && target.enemy.health > 0 &&
     (targets === 'any' || (target.enemy.definition.traits.flying ? targets === 'air' : targets === 'ground'));
@@ -17,8 +19,11 @@ function targetScore(entity: EnemyEntity, priority: TargetPriority, distanceSqua
 
 export function targetingSystem(towers: readonly TowerEntity[], enemies: readonly EnemyEntity[], delta: number) {
   for (const { tower, position } of towers) {
-    tower.cooldown = Math.max(0, tower.cooldown - delta);
-    if (tower.cooldown > 0 || tower.stats.targets === 'none') continue;
+    const previousCooldown = tower.cooldown;
+    tower.cooldown = Math.max(0, previousCooldown - delta);
+    const ready = tower.cooldown === 0;
+    const beginWindup = previousCooldown > ATTACK_WINDUP_SECONDS && tower.cooldown <= ATTACK_WINDUP_SECONDS;
+    if ((!ready && !beginWindup) || tower.stats.targets === 'none') continue;
 
     let selected: EnemyEntity | null = null;
     let bestScore = -Infinity;
@@ -36,6 +41,11 @@ export function targetingSystem(towers: readonly TowerEntity[], enemies: readonl
         bestScore = score;
       }
     }
-    tower.target = selected;
+    if (ready) {
+      tower.target = selected;
+      tower.aimHeading = undefined;
+    } else if (selected) {
+      tower.aimHeading = Math.atan2(selected.position.x - position.x, selected.position.z - position.z);
+    }
   }
 }

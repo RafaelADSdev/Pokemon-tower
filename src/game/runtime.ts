@@ -187,7 +187,7 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
         id: nextEntityId++,
         position: createPosition(x, 0, z),
         tower: {
-          definition, slotId, heading: 0, cooldown: 0, target: null, level: 1, evolved: false,
+          definition, slotId, heading: 0, attackSerial: 0, cooldown: 0, target: null, level: 1, evolved: false,
           totalSpent: definition.cost, priority: 'first', stats,
           effectiveRange: stats.range, effectiveDamage: stats.damage, incomeRemaining: stats.income?.interval ?? 0,
         },

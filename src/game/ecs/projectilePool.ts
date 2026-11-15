@@ -10,7 +10,7 @@ export function createProjectilePool(world: World<GameEntity>) {
     id: -1 - index,
     position: createPosition(),
     projectile: {
-      color: '', damage: 0, speed: 0, target: null, element: starterCreature.element,
+      color: '', damage: 0, speed: 0, heading: 0, target: null, element: starterCreature.element,
       targets: 'none', splash: 0, status: undefined, airMultiplier: 1,
     },
   }));
@@ -29,6 +29,7 @@ export function createProjectilePool(world: World<GameEntity>) {
       projectile.color = definition.color;
       projectile.damage = tower.tower.effectiveDamage;
       projectile.speed = definition.projectileSpeed;
+      projectile.heading = Math.atan2(target.position.x - position.x, target.position.z - position.z);
       projectile.target = target;
       projectile.element = definition.element;
       projectile.targets = tower.tower.stats.targets;

@@ -58,6 +58,8 @@ export interface GameEntity {
     definition: CreatureDefinition;
     slotId: string;
     heading: number;
+    aimHeading?: number;
+    attackSerial: number;
     cooldown: number;
     target: EnemyEntity | null;
     level: TowerLevel;
@@ -73,6 +75,7 @@ export interface GameEntity {
     color: string;
     damage: number;
     speed: number;
+    heading: number;
     target: EnemyEntity | null;
     element: ElementId;
     targets: CreatureDefinition['targets'];
@@ -87,6 +90,9 @@ export interface GameEntity {
     age: number;
     duration: number;
     serial: number;
+    element?: ElementId;
+    heading?: number;
+    radius?: number;
   };
 }
 

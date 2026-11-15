@@ -41,8 +41,12 @@ export function projectileSystem(
     const step = projectile.speed * delta;
     const distanceSquared = dx * dx + dy * dy + dz * dz;
     if (distanceSquared <= step * step) {
-      feedback.spawn('impact', target.position, projectile.color);
-      feedback.queue('impact');
+      feedback.spawn('impact', target.position, projectile.color, 0, {
+        element: projectile.element,
+        heading: dx || dz ? Math.atan2(dx, dz) : projectile.heading,
+        radius: projectile.splash,
+      });
+      feedback.queue('impact', projectile.element);
       applyProjectileDamage(target, projectile, feedback);
       splashDamage(target, projectile, enemies, feedback);
       pool.release(entity);

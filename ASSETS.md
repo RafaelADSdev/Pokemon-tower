@@ -15,6 +15,7 @@ Os modelos, as ilustrações, os cenários e o áudio originais de Pokémon Towe
 | `public/images/badges/*.png` | Insígnias das ligas de Kanto, Johto e Hoenn. [Catálogo de insígnias][pokemon-badges] | Direitos dos respectivos titulares de Pokémon |
 | `public/audio/forest.mp3`, `cave.mp3`, `volcano.mp3` | Três trilhas instrumentais originais para floresta, caverna e vulcão, compostas e sintetizadas por [scripts/generate-audio.py](scripts/generate-audio.py) | [CC0 1.0][cc0] |
 | `public/audio/{boss,death,defeat,impact,leak,pause,place,sell,shot,ui,upgrade,victory,wave}.mp3` | Treze efeitos originais sintetizados por [scripts/generate-audio.py](scripts/generate-audio.py) | [CC0 1.0][cc0] |
+| `public/audio/attack-sfx.mp3` | Doze efeitos originais de disparo e impacto, dois por elemento, sintetizados por [scripts/generate-attack-audio.py](scripts/generate-attack-audio.py) | [CC0 1.0][cc0] |
 | DM Serif Text | `@fontsource/dm-serif-text` com licença no pacote. [Fontsource][dm] | [SIL OFL 1.1][ofl] |
 | Instrument Sans variável | `@fontsource-variable/instrument-sans` com licença no pacote. [Fontsource][instrument] | [SIL OFL 1.1][ofl] |
 | Ícones de interface e glifos dos elementos | `lucide-react` com avisos de licença no pacote. [Lucide][lucide] | ISC, com MIT para ícones derivados de Feather |

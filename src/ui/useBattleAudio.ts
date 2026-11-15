@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useSyncExternalStore } from 'react';
-import { playMapMusic, playSound, setAudioMuted, unlockAudio } from '@/audio/audio';
+import { playAttackSound, playMapMusic, playSound, setAudioMuted, unlockAudio } from '@/audio/audio';
 import type { MapId } from '@/data/maps/types';
 import type { GameRuntime } from '@/game/runtime';
 
@@ -33,7 +33,10 @@ export function useBattleAudio(runtime: GameRuntime, mapId: MapId) {
     window.addEventListener('pointerup', activate, { capture: true, once: true });
     window.addEventListener('keydown', activate, { capture: true, once: true });
     playMapMusic(mapId);
-    const unsubscribe = runtime.subscribeAudio(playSound);
+    const unsubscribe = runtime.subscribeAudio((cue, element) => {
+      if (element && (cue === 'shot' || cue === 'impact')) playAttackSound(element, cue);
+      else playSound(cue);
+    });
     return () => {
       window.removeEventListener('pointerup', activate, true);
       window.removeEventListener('keydown', activate, true);
