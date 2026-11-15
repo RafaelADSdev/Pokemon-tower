@@ -1,8 +1,9 @@
 import { Suspense, useEffect, type ReactNode } from "react";
 import { Clone, useGLTF } from "@react-three/drei";
 import { Mesh, type BufferGeometry, type Matrix4, type Material, type Object3D } from "three";
-import { creatures } from "@/data/creatures";
+import { useStore } from "zustand";
 import { enemyById } from "@/data/enemies";
+import type { WaveDefinition } from "@/data/waves/types";
 import type { GameRuntime } from "@/game/runtime";
 import { RenderBoundary } from "../RenderBoundary";
 import { modelNodeByPath } from "./generatedNodes";
@@ -13,20 +14,37 @@ export interface InstancedAsset {
   localTransform?: Matrix4;
 }
 
-export function ModelWarmup({ runtime }: { runtime: GameRuntime }) {
-  useEffect(() => {
-    const paths = new Set<string>();
-    for (const wave of runtime.waves) {
-      for (const group of wave.groups) {
-        const path = enemyById[group.enemyId]?.model;
-        if (path) paths.add(path);
+export function collectEnemyTypes(waves: readonly WaveDefinition[]) {
+  const ids = new Set<string>();
+  for (const wave of waves) {
+    for (const group of wave.groups) {
+      let id: string | undefined = group.enemyId;
+      while (id !== undefined && !ids.has(id)) {
+        ids.add(id);
+        id = enemyById[id]?.traits.split?.enemyId;
       }
     }
-    for (const definition of creatures) {
-      if (definition.model) paths.add(definition.model);
+  }
+  return ids;
+}
+
+export function ModelWarmup({ runtime }: { runtime: GameRuntime }) {
+  const wave = useStore(runtime.store, (state) => state.wave);
+  useEffect(() => {
+    const upcoming = collectEnemyTypes(runtime.waves.slice(Math.max(0, wave - 1), wave + 1));
+    const warm = () => {
+      for (const id of upcoming) {
+        const path = enemyById[id]?.model;
+        if (path) useGLTF.preload(path, false, true);
+      }
+    };
+    if (typeof window.requestIdleCallback === "function") {
+      const job = window.requestIdleCallback(warm, { timeout: 1_800 });
+      return () => window.cancelIdleCallback(job);
     }
-    for (const path of paths) useGLTF.preload(path, false, true);
-  }, [runtime]);
+    const job = window.setTimeout(warm, 240);
+    return () => window.clearTimeout(job);
+  }, [runtime, wave]);
   return null;
 }
 

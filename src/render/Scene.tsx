@@ -4,20 +4,16 @@ import { OrbitControls, OrthographicCamera, PerformanceMonitor } from "@react-th
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { lazy, Suspense, useMemo, useRef, useState, type ComponentRef } from "react";
 import { Color, MOUSE, TOUCH, Vector3 } from "three";
+import { useStore } from "zustand";
 import type { MapDefinition } from "@/data/maps/types";
 import type { EnemyEntity } from "@/game/ecs/world";
 import type { GameRuntime } from "@/game/runtime";
 import { CanvasFallback } from "./CanvasFallback";
-import { Effects } from "./Effects";
-import { Enemies } from "./Enemies";
 import { Map } from "./Map";
-import { Projectiles } from "./Projectiles";
 import { RenderBoundary } from "./RenderBoundary";
-import { Towers } from "./Towers";
 import { supportsWebGL2, useCompactGraphics, useReducedMotion } from "./devicePreferences";
-import { ModelWarmup } from "./models/ModelAssets";
 
-const PostProcessing = lazy(() => import("./PostProcessing"));
+const BattleActors = lazy(() => import("./BattleActors"));
 
 interface SceneProps {
   map: MapDefinition;
@@ -114,25 +110,30 @@ function Background({ tint }: { tint: string }) {
   );
 }
 
-function BattleEntities({ runtime, selectedSlot, onSelectEnemy, compact, reducedMotion }: {
+function BattleDriver({ runtime, selectedSlot, onSelectEnemy, highEffects, reducedMotion }: {
   runtime: GameRuntime;
   selectedSlot?: string | null;
   onSelectEnemy?: SceneProps["onSelectEnemy"];
-  compact: boolean;
+  highEffects: boolean;
   reducedMotion: boolean;
 }) {
   const alpha = useRef(0);
+  const inPlay = useStore(runtime.store, (state) => state.wave > 0 || state.towerRevision > 0);
   useFrame((_, delta) => {
     alpha.current = runtime.advance(delta);
   }, -2);
+  if (!inPlay && !selectedSlot) return null;
   return (
-    <>
-      <ModelWarmup runtime={runtime} />
-      <Enemies runtime={runtime} alpha={alpha} reducedMotion={reducedMotion} onSelectEnemy={onSelectEnemy} />
-      <Projectiles runtime={runtime} alpha={alpha} />
-      <Towers runtime={runtime} selectedSlot={selectedSlot} />
-      <Effects runtime={runtime} compact={compact} reducedMotion={reducedMotion} />
-    </>
+    <Suspense fallback={null}>
+      <BattleActors
+        runtime={runtime}
+        alpha={alpha}
+        selectedSlot={selectedSlot}
+        onSelectEnemy={onSelectEnemy}
+        highEffects={highEffects}
+        reducedMotion={reducedMotion}
+      />
+    </Suspense>
   );
 }
 
@@ -194,12 +195,7 @@ export function Scene({
           onChange={({ factor }) => setQuality(factor)}
           onFallback={() => setQuality(0.16)}
         />
-        {runtime && <BattleEntities runtime={runtime} selectedSlot={selectedSlot} onSelectEnemy={onSelectEnemy} compact={compact || !highEffects} reducedMotion={reducedMotion} />}
-        {highEffects && !reducedMotion && (
-          <RenderBoundary fallback={null}>
-            <Suspense fallback={null}><PostProcessing /></Suspense>
-          </RenderBoundary>
-        )}
+        {runtime && <BattleDriver runtime={runtime} selectedSlot={selectedSlot} onSelectEnemy={onSelectEnemy} highEffects={highEffects} reducedMotion={reducedMotion} />}
       </Canvas>
     </RenderBoundary>
   );

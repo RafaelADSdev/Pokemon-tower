@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest run",
+    "bench": "vitest bench --run src/game/runtime.bench.ts --silent=false",
     "assets:models": "node scripts/export-models.mjs"
   },
   "dependencies": {

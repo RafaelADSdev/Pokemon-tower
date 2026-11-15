@@ -1,7 +1,7 @@
 import { brand } from '@/config/brand';
 
 export const pt = {
-  languageSwitch: 'Switch language to English',
+  languageSwitch: 'EN · Switch language to English',
   languageCode: 'EN',
   navigation: 'Navegação principal',
   expeditions: 'Expedições',
@@ -12,7 +12,6 @@ export const pt = {
   wavesPerMap: (n: number) => `${n} ondas por região`,
   difficulties: { intro: 'Introdução', standard: 'Intermediário', expert: 'Avançado' },
   play: 'Jogar',
-  playMap: (name: string) => `Jogar ${name}`,
   stars: (n: number) => `${n} ${n === 1 ? 'estrela' : 'estrelas'}`,
   starsOfThree: (n: number) => `${n} de 3 estrelas`,
   availableCreatures: (n: number, count: number) => `${n} de ${count} criaturas disponíveis`,
@@ -49,7 +48,7 @@ export const pt = {
   callNext: 'Chamar próxima',
   preview: 'Próxima onda',
   completed: 'concluídas',
-  inspect: (name: string, element: string, count: number) => `Inspecionar ${name}, ${element}, ${count} nesta onda`,
+  inspect: (name: string, element: string, count: number) => `${name} ×${count}. Inspecionar elemento ${element}.`,
   speed: 'Velocidade de jogo',
   level: 'Nível',
   damage: 'Dano',
@@ -76,7 +75,7 @@ export const pt = {
 };
 
 export const en: typeof pt = {
-  languageSwitch: 'Mudar idioma para português',
+  languageSwitch: 'PT · Mudar idioma para português',
   languageCode: 'PT',
   navigation: 'Main navigation',
   expeditions: 'Expeditions',
@@ -87,7 +86,6 @@ export const en: typeof pt = {
   wavesPerMap: (n) => `${n} waves per region`,
   difficulties: { intro: 'Introductory', standard: 'Intermediate', expert: 'Advanced' },
   play: 'Play',
-  playMap: (name) => `Play ${name}`,
   stars: (n) => `${n} ${n === 1 ? 'star' : 'stars'}`,
   starsOfThree: (n) => `${n} of 3 stars`,
   availableCreatures: (n, count) => `${n} of ${count} creatures available`,
@@ -124,7 +122,7 @@ export const en: typeof pt = {
   callNext: 'Call next wave',
   preview: 'Next wave',
   completed: 'cleared',
-  inspect: (name, element, count) => `Inspect ${name}, ${element}, ${count} in this wave`,
+  inspect: (name, element, count) => `${name} ×${count}. Inspect the ${element} element.`,
   speed: 'Game speed',
   level: 'Level',
   damage: 'Damage',

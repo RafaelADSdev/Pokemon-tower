@@ -1,5 +1,6 @@
 export type Waypoint = readonly [x: number, z: number];
 export type MapId = "forest" | "cave" | "volcano";
+export type BiomeId = "forest" | "cave" | "volcano";
 
 export interface TowerSlot {
   readonly id: string;
@@ -7,7 +8,7 @@ export interface TowerSlot {
 }
 
 export interface MapTheme {
-  readonly biome: MapId;
+  readonly biome: BiomeId;
   readonly terrain: string;
   readonly trail: string;
   readonly edge: string;

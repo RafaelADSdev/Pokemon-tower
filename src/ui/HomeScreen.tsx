@@ -41,7 +41,7 @@ export function HomeScreen() {
               const stars = getStarsForLives(bestLives[map.id] ?? 0);
               const name = localized(map);
               return (
-                <Link href={map.id === 'forest' ? '/play' : `/play/${map.id}`} className="map-card" key={map.id} aria-label={t.playMap(name)} aria-description={t.starsOfThree(stars)}>
+                <Link href={map.id === 'forest' ? '/play' : `/play/${map.id}`} className="map-card" key={map.id}>
                   <div className={`map-cover cover-${map.theme.biome}`}><Image src={`/images/map-${map.id}.webp`} alt="" fill unoptimized sizes="(max-width: 650px) 100vw, 33vw" /></div>
                   <div className="map-card-content">
                     <div className="map-card-kicker"><span>{t.difficulties[map.difficulty]}</span><Stars count={stars} /></div>

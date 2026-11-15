@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, type RefObject } from "react";
 import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { InstancedMesh, Object3D, Sphere, Vector3 } from "three";
+import { useStore } from "zustand";
 import { enemies, type EnemyDefinition } from "@/data/enemies";
 import type { EnemyEntity } from "@/game/ecs/world";
 import type { GameRuntime } from "@/game/runtime";
 import { EnemyIndicators } from "./EnemyIndicators";
 import { drawCapacity, interpolatePosition, prepareInstances, publishInstances } from "./instances";
-import { LoadingModel, useInstancedAsset, type InstancedAsset } from "./models/ModelAssets";
+import { collectEnemyTypes, LoadingModel, useInstancedAsset, type InstancedAsset } from "./models/ModelAssets";
 import { enemyPieces } from "./models/enemySculptures";
 import { sculpture } from "./models/sculpture";
 
@@ -131,9 +132,11 @@ function LoadedEnemyBatch({ path, ...props }: EnemyBatchProps & { path: string }
 }
 
 export function Enemies(props: EnemiesProps) {
+  const wave = useStore(props.runtime.store, (state) => state.wave);
+  const present = useMemo(() => collectEnemyTypes(props.runtime.waves.slice(0, wave)), [props.runtime, wave]);
   return (
     <group>
-      {enemies.map((definition) => {
+      {enemies.filter(({ id }) => present.has(id)).map((definition) => {
         const fallback = <FallbackEnemyBatch definition={definition} {...props} />;
         return definition.model ? (
           <LoadingModel key={definition.model} fallback={fallback}>
