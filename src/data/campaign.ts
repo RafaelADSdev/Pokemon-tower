@@ -108,6 +108,7 @@ function makeGym(regionId: CampaignRegionId, gym: GymDefinition, regionIndex: nu
       trail: theme.trail,
       accent: theme.accent,
       atmosphere: theme.atmosphere,
+      arena: { id, specialty: gym.specialty, region: regionId, badge: gym.badge, detail: gym.arenaColor },
     },
   };
   const roster = regionalEnemyIds[regionId];

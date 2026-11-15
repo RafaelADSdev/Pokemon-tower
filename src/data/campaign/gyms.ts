@@ -39,6 +39,7 @@ export interface GymDefinition {
   readonly leader: string;
   readonly badge: string;
   readonly specialty: GymSpecialty;
+  readonly arenaColor: string;
 }
 
 type RegionDefinition = {
@@ -60,14 +61,14 @@ export const regionDefinitions = [
     descriptionEn: 'Start in Pewter and take on the eight gyms of the first region.',
     cover: 'forest',
     gyms: [
-      { slug: 'pewter', city: 'Pewter', leader: 'Brock', badge: 'Boulder', specialty: 'rock' },
-      { slug: 'cerulean', city: 'Cerulean', leader: 'Misty', badge: 'Cascade', specialty: 'water' },
-      { slug: 'vermilion', city: 'Vermilion', leader: 'Lt. Surge', badge: 'Thunder', specialty: 'electric' },
-      { slug: 'celadon', city: 'Celadon', leader: 'Erika', badge: 'Rainbow', specialty: 'grass' },
-      { slug: 'fuchsia', city: 'Fuchsia', leader: 'Koga', badge: 'Soul', specialty: 'poison' },
-      { slug: 'saffron', city: 'Saffron', leader: 'Sabrina', badge: 'Marsh', specialty: 'psychic' },
-      { slug: 'cinnabar', city: 'Cinnabar', leader: 'Blaine', badge: 'Volcano', specialty: 'fire' },
-      { slug: 'viridian', city: 'Viridian', leader: 'Giovanni', badge: 'Earth', specialty: 'ground' },
+      { slug: 'pewter', city: 'Pewter', leader: 'Brock', badge: 'Boulder', specialty: 'rock', arenaColor: '#aa7954' },
+      { slug: 'cerulean', city: 'Cerulean', leader: 'Misty', badge: 'Cascade', specialty: 'water', arenaColor: '#218cc5' },
+      { slug: 'vermilion', city: 'Vermilion', leader: 'Lt. Surge', badge: 'Thunder', specialty: 'electric', arenaColor: '#cd8b24' },
+      { slug: 'celadon', city: 'Celadon', leader: 'Erika', badge: 'Rainbow', specialty: 'grass', arenaColor: '#548e48' },
+      { slug: 'fuchsia', city: 'Fuchsia', leader: 'Koga', badge: 'Soul', specialty: 'poison', arenaColor: '#934791' },
+      { slug: 'saffron', city: 'Saffron', leader: 'Sabrina', badge: 'Marsh', specialty: 'psychic', arenaColor: '#a95389' },
+      { slug: 'cinnabar', city: 'Cinnabar', leader: 'Blaine', badge: 'Volcano', specialty: 'fire', arenaColor: '#be4c3a' },
+      { slug: 'viridian', city: 'Viridian', leader: 'Giovanni', badge: 'Earth', specialty: 'ground', arenaColor: '#a37a45' },
     ],
   },
   {
@@ -78,14 +79,14 @@ export const regionDefinitions = [
     descriptionEn: 'Travel through Johto’s historic towns to the Blackthorn Gym.',
     cover: 'cave',
     gyms: [
-      { slug: 'violet', city: 'Violet', leader: 'Falkner', badge: 'Zephyr', specialty: 'flying' },
-      { slug: 'azalea', city: 'Azalea', leader: 'Bugsy', badge: 'Hive', specialty: 'bug' },
-      { slug: 'goldenrod', city: 'Goldenrod', leader: 'Whitney', badge: 'Plain', specialty: 'normal' },
-      { slug: 'ecruteak', city: 'Ecruteak', leader: 'Morty', badge: 'Fog', specialty: 'ghost' },
-      { slug: 'cianwood', city: 'Cianwood', leader: 'Chuck', badge: 'Storm', specialty: 'fighting' },
-      { slug: 'olivine', city: 'Olivine', leader: 'Jasmine', badge: 'Mineral', specialty: 'steel' },
-      { slug: 'mahogany', city: 'Mahogany', leader: 'Pryce', badge: 'Glacier', specialty: 'ice' },
-      { slug: 'blackthorn', city: 'Blackthorn', leader: 'Clair', badge: 'Rising', specialty: 'dragon' },
+      { slug: 'violet', city: 'Violet', leader: 'Falkner', badge: 'Zephyr', specialty: 'flying', arenaColor: '#677cc2' },
+      { slug: 'azalea', city: 'Azalea', leader: 'Bugsy', badge: 'Hive', specialty: 'bug', arenaColor: '#9c9740' },
+      { slug: 'goldenrod', city: 'Goldenrod', leader: 'Whitney', badge: 'Plain', specialty: 'normal', arenaColor: '#ca7f94' },
+      { slug: 'ecruteak', city: 'Ecruteak', leader: 'Morty', badge: 'Fog', specialty: 'ghost', arenaColor: '#705bb3' },
+      { slug: 'cianwood', city: 'Cianwood', leader: 'Chuck', badge: 'Storm', specialty: 'fighting', arenaColor: '#a9563f' },
+      { slug: 'olivine', city: 'Olivine', leader: 'Jasmine', badge: 'Mineral', specialty: 'steel', arenaColor: '#638998' },
+      { slug: 'mahogany', city: 'Mahogany', leader: 'Pryce', badge: 'Glacier', specialty: 'ice', arenaColor: '#65a9c0' },
+      { slug: 'blackthorn', city: 'Blackthorn', leader: 'Clair', badge: 'Rising', specialty: 'dragon', arenaColor: '#735392' },
     ],
   },
   {
@@ -96,14 +97,14 @@ export const regionDefinitions = [
     descriptionEn: 'Cross Hoenn’s coastal and volcanic routes on the way to Sootopolis.',
     cover: 'volcano',
     gyms: [
-      { slug: 'rustboro', city: 'Rustboro', leader: 'Roxanne', badge: 'Stone', specialty: 'rock' },
-      { slug: 'dewford', city: 'Dewford', leader: 'Brawly', badge: 'Knuckle', specialty: 'fighting' },
-      { slug: 'mauville', city: 'Mauville', leader: 'Wattson', badge: 'Dynamo', specialty: 'electric' },
-      { slug: 'lavaridge', city: 'Lavaridge', leader: 'Flannery', badge: 'Heat', specialty: 'fire' },
-      { slug: 'petalburg', city: 'Petalburg', leader: 'Norman', badge: 'Balance', specialty: 'normal' },
-      { slug: 'fortree', city: 'Fortree', leader: 'Winona', badge: 'Feather', specialty: 'flying' },
-      { slug: 'mossdeep', city: 'Mossdeep', leader: 'Tate & Liza', badge: 'Mind', specialty: 'psychic' },
-      { slug: 'sootopolis', city: 'Sootopolis', leader: 'Wallace', badge: 'Rain', specialty: 'water' },
+      { slug: 'rustboro', city: 'Rustboro', leader: 'Roxanne', badge: 'Stone', specialty: 'rock', arenaColor: '#a6633d' },
+      { slug: 'dewford', city: 'Dewford', leader: 'Brawly', badge: 'Knuckle', specialty: 'fighting', arenaColor: '#497a7a' },
+      { slug: 'mauville', city: 'Mauville', leader: 'Wattson', badge: 'Dynamo', specialty: 'electric', arenaColor: '#92a53f' },
+      { slug: 'lavaridge', city: 'Lavaridge', leader: 'Flannery', badge: 'Heat', specialty: 'fire', arenaColor: '#d16c3f' },
+      { slug: 'petalburg', city: 'Petalburg', leader: 'Norman', badge: 'Balance', specialty: 'normal', arenaColor: '#8c725d' },
+      { slug: 'fortree', city: 'Fortree', leader: 'Winona', badge: 'Feather', specialty: 'flying', arenaColor: '#598a70' },
+      { slug: 'mossdeep', city: 'Mossdeep', leader: 'Tate & Liza', badge: 'Mind', specialty: 'psychic', arenaColor: '#675bb0' },
+      { slug: 'sootopolis', city: 'Sootopolis', leader: 'Wallace', badge: 'Rain', specialty: 'water', arenaColor: '#288c86' },
     ],
   },
 ] as const satisfies readonly RegionDefinition[];

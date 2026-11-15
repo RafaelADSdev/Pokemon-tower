@@ -142,25 +142,27 @@ function SplitMarkers({ paths, color }: { paths: MapDefinition["paths"]; color: 
 
 export function Terrain({ map }: { map: MapDefinition }) {
   const { width, depth } = map.size;
-  const { terrain, trail, edge, accent } = map.theme;
+  const { terrain, trail, edge, accent, arena } = map.theme;
   const layers = useDiorama(width, depth);
+  const foundation = arena ? new Color(arena.detail).multiplyScalar(0.45) : new Color(edge);
+  const laneEdge = arena ? "#2b303b" : edge;
 
   return (
     <group>
       <mesh geometry={layers.bedrock} position-y={-1.45} rotation-x={-Math.PI / 2}>
-        <meshStandardMaterial color={new Color(edge).multiplyScalar(0.67)} roughness={1} flatShading />
+        <meshStandardMaterial color={foundation.clone().multiplyScalar(0.67)} roughness={1} flatShading />
       </mesh>
       <mesh geometry={layers.soil} position-y={-0.68} rotation-x={-Math.PI / 2}>
-        <meshStandardMaterial color={edge} roughness={1} flatShading />
+        <meshStandardMaterial color={foundation} roughness={1} flatShading />
       </mesh>
       <mesh geometry={layers.surface} position-y={-0.08} rotation-x={-Math.PI / 2} receiveShadow>
         <meshStandardMaterial color={terrain} roughness={1} flatShading />
       </mesh>
-      <Grid width={width} depth={depth} color={accent} />
+      {!arena && <Grid width={width} depth={depth} color={accent} />}
       {map.paths.map((path, index) => (
-        <Trail key={index} path={path} trail={trail} edge={edge} lift={index * 0.0004} />
+        <Trail key={index} path={path} trail={trail} edge={laneEdge} lift={index * 0.0004} />
       ))}
-      {map.paths.length > 1 && <SplitMarkers paths={map.paths} color={edge} />}
+      {map.paths.length > 1 && <SplitMarkers paths={map.paths} color={laneEdge} />}
     </group>
   );
 }

@@ -1,3 +1,5 @@
+import type { CampaignRegionId, GymSpecialty } from "../campaign/gyms";
+
 export type Waypoint = readonly [x: number, z: number];
 export type MapId = "forest" | "cave" | "volcano";
 export type BiomeId = "forest" | "cave" | "volcano";
@@ -7,6 +9,14 @@ export interface TowerSlot {
   readonly position: Waypoint;
 }
 
+export interface GymArenaTheme {
+  readonly id: string;
+  readonly specialty: GymSpecialty;
+  readonly region: CampaignRegionId;
+  readonly badge: string;
+  readonly detail: string;
+}
+
 export interface MapTheme {
   readonly biome: BiomeId;
   readonly terrain: string;
@@ -14,6 +24,7 @@ export interface MapTheme {
   readonly edge: string;
   readonly accent: string;
   readonly atmosphere: string;
+  readonly arena?: GymArenaTheme;
 }
 
 export interface MapDefinition {
