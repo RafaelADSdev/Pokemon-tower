@@ -1,4 +1,4 @@
-import { create, createStore, type StateCreator } from 'zustand';
+import { createStore, type StateCreator } from 'zustand';
 import { gameRules } from '@/data/rules';
 import type { GameSpeed } from '../time';
 
@@ -9,11 +9,15 @@ interface RunState {
   lives: number;
   wave: number;
   maxWaves: number;
+  wavesActive: number;
+  wavesCompleted: number;
   paused: boolean;
   speed: GameSpeed;
   status: GameStatus;
   selectedSlot: string | null;
+  selectedEnemyId: number | null;
   occupiedSlots: Readonly<Partial<Record<string, string>>>;
+  towerRevision: number;
 }
 
 export interface GameState extends RunState {
@@ -21,6 +25,7 @@ export interface GameState extends RunState {
   togglePaused: () => void;
   setSpeed: (speed: GameSpeed) => void;
   selectSlot: (slot: string | null) => void;
+  selectEnemy: (enemy: number | null) => void;
   reset: (maxWaves?: number) => void;
 }
 
@@ -29,11 +34,15 @@ const initialRun: RunState = {
   lives: gameRules.startingLives,
   wave: 0,
   maxWaves: gameRules.maxWaves,
+  wavesActive: 0,
+  wavesCompleted: 0,
   paused: false,
   speed: 1,
   status: 'ready',
   selectedSlot: null,
+  selectedEnemyId: null,
   occupiedSlots: {},
+  towerRevision: 0,
 };
 
 const state: StateCreator<GameState> = (set) => ({
@@ -41,9 +50,9 @@ const state: StateCreator<GameState> = (set) => ({
   setPaused: (paused) => set({ paused }),
   togglePaused: () => set(({ paused }) => ({ paused: !paused })),
   setSpeed: (speed) => set({ speed }),
-  selectSlot: (selectedSlot) => set({ selectedSlot }),
+  selectSlot: (selectedSlot) => set({ selectedSlot, selectedEnemyId: null }),
+  selectEnemy: (selectedEnemyId) => set({ selectedEnemyId, selectedSlot: null }),
   reset: (maxWaves = initialRun.maxWaves) => set({ ...initialRun, maxWaves }),
 });
 
-export const useGameStore = create<GameState>(state);
 export const createGameStore = () => createStore<GameState>(state);

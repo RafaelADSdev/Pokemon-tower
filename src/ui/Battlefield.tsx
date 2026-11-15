@@ -2,14 +2,18 @@
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
-import { ArrowLeft, Coins, Flag, Flame, Heart, Pause, Play, RotateCcw, Sprout } from 'lucide-react';
+import { ArrowLeft, Coins, Flag, Heart, RotateCcw, Sprout, X } from 'lucide-react';
 import { useState } from 'react';
 import { useStore } from 'zustand';
 import { brand } from '@/config/brand';
-import { starterCreature } from '@/data/creatures';
+import type { EnemyDefinition } from '@/data/enemies';
 import { forestMap } from '@/data/maps/forest';
 import { forestWaves } from '@/data/waves/forest';
 import { createGameRuntime } from '@/game/runtime';
+import type { EnemyEntity } from '@/game/ecs/world';
+import { BattleControls } from './BattleControls';
+import { CreaturesPanel } from './CreaturesPanel';
+import { ElementGlyph, ElementInfo, ElementTag } from './ElementInfo';
 
 const Scene = dynamic(() => import('@/render/Scene').then((module) => module.Scene), {
   ssr: false,
@@ -19,10 +23,20 @@ const Scene = dynamic(() => import('@/render/Scene').then((module) => module.Sce
 export function Battlefield() {
   const [runtime] = useState(() => createGameRuntime(forestMap, { waves: forestWaves }));
   const game = useStore(runtime.store);
-  const { money, lives, wave, maxWaves, selectedSlot, selectSlot, occupiedSlots, speed, paused, status } = game;
-  const selectedTower = selectedSlot ? occupiedSlots[selectedSlot] : undefined;
+  const [previewEnemy, setPreviewEnemy] = useState<EnemyDefinition | null>(null);
+  const { money, lives, wave, maxWaves, selectedSlot, selectSlot, occupiedSlots, selectedEnemyId, status } = game;
+  const enemy = selectedEnemyId === null ? previewEnemy : runtime.getEnemy(selectedEnemyId)?.enemy.definition;
   const ended = status === 'victory' || status === 'defeat';
-  const canRecruit = Boolean(selectedSlot && !selectedTower && money >= starterCreature.cost && !ended && !paused);
+
+  function selectPosition(slot: string) {
+    setPreviewEnemy(null);
+    selectSlot(slot);
+  }
+
+  function inspectEnemy(entity: EnemyEntity) {
+    setPreviewEnemy(null);
+    game.selectEnemy(entity.id);
+  }
 
   return (
     <main className="battle-shell">
@@ -41,13 +55,13 @@ export function Battlefield() {
             </dl>
           </div>
           <div className="battle-board">
-            <Scene map={forestMap} runtime={runtime} selectedSlot={selectedSlot} onSelectSlot={selectSlot} />
+            <Scene map={forestMap} runtime={runtime} selectedSlot={selectedSlot} onSelectSlot={selectPosition} onSelectEnemy={inspectEnemy} />
             {ended && (
               <div className="board-overlay">
                 <div role="status">
                   <h2>{status === 'victory' ? 'Vitória!' : 'A defesa caiu'}</h2>
                   <p>{status === 'victory' ? `O bosque está seguro com ${lives} vidas restantes.` : `A última onda alcançada foi a ${wave}.`}</p>
-                  <button className="gold-button" onClick={() => runtime.restart()}><RotateCcw size={15} aria-hidden="true" /> Jogar novamente</button>
+                  <button className="gold-button" onClick={() => { setPreviewEnemy(null); runtime.restart(); }}><RotateCcw size={15} aria-hidden="true" /> Jogar novamente</button>
                 </div>
               </div>
             )}
@@ -57,37 +71,25 @@ export function Battlefield() {
             {forestMap.slots.map(({ id }) => (
               <button key={id} type="button" aria-pressed={selectedSlot === id} data-occupied={Boolean(occupiedSlots[id])}
                 aria-label={`Posição ${id.toUpperCase()}${occupiedSlots[id] ? ', ocupada' : ''}`}
-                disabled={ended} onClick={() => selectSlot(id)}>{id}</button>
+                disabled={ended} onClick={() => selectPosition(id)}>{id}</button>
             ))}
           </div>
         </section>
         <aside className="battle-aside" aria-label="Comandos de batalha">
-          <section className="battle-panel">
-            <h2><Flag size={18} aria-hidden="true" /> Ondas</h2>
-            <p className="panel-copy" role="status">{paused ? 'Partida pausada' : status === 'running' ? `Onda ${wave} em andamento` : ended ? 'Partida encerrada' : `Onda ${wave + 1} pronta para começar`}</p>
-            <div className="field-controls">
-              <button className="gold-button" onClick={() => runtime.startWave()} disabled={status !== 'ready' || paused}><Play size={15} aria-hidden="true" /> Iniciar onda</button>
-              <button className="quiet-button" onClick={game.togglePaused} disabled={ended} aria-label={paused ? 'Continuar' : 'Pausar'}>
-                {paused ? <Play size={17} aria-hidden="true" /> : <Pause size={17} aria-hidden="true" />}
-              </button>
-              <div className="speed-controls" role="group" aria-label="Velocidade de jogo">
-                {([1, 2, 3] as const).map((rate) => (
-                  <button key={rate} aria-pressed={speed === rate} onClick={() => game.setSpeed(rate)} disabled={ended}>{rate}×</button>
-                ))}
+          <BattleControls runtime={runtime} game={game} onInspect={(definition) => { game.selectEnemy(null); setPreviewEnemy(definition); }} />
+          {enemy && !ended && (
+            <section className="battle-panel" aria-labelledby="enemy-name">
+              <div className="panel-heading">
+                <h2 id="enemy-name"><ElementGlyph element={enemy.element} />{enemy.name}</h2>
+                <button type="button" className="icon-action" aria-label="Fechar detalhes do inimigo" onClick={() => { setPreviewEnemy(null); game.selectEnemy(null); }}><X size={17} aria-hidden="true" /></button>
               </div>
-            </div>
-          </section>
-          <section className="battle-panel">
-            <h2><Sprout size={18} aria-hidden="true" /> {brand.creatures}</h2>
-            <p className="panel-copy" role="status">{selectedTower ? `${starterCreature.name} defende a posição ${selectedSlot?.toUpperCase()}.` : selectedSlot ? `Posição ${selectedSlot.toUpperCase()} selecionada. Escolha a criatura para implantar.` : 'Escolha uma posição no mapa para implantar uma criatura.'}</p>
-            <div className="recruit-list">
-              <button type="button" className="recruit" disabled={!canRecruit} onClick={() => selectedSlot && runtime.placeTower(selectedSlot, starterCreature.id)}>
-                <span className="recruit-emblem"><Flame size={20} aria-hidden="true" /></span>
-                <span className="recruit-copy"><strong>{starterCreature.name}</strong><small>{starterCreature.description}</small></span>
-                <span className="price"><Coins size={13} aria-label="moedas" /> {starterCreature.cost}</span>
-              </button>
-            </div>
-          </section>
+              <p className="panel-copy"><ElementTag element={enemy.element} /></p>
+              <p className="panel-copy">{enemy.description}</p>
+              <ElementInfo element={enemy.element} incoming />
+              {enemy.traits.shield && <ElementInfo element={enemy.traits.shield.element} incoming heading="Dano contra o escudo" />}
+            </section>
+          )}
+          <CreaturesPanel runtime={runtime} game={game} />
         </aside>
       </div>
     </main>

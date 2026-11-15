@@ -1,7 +1,26 @@
 import { World, type With } from 'miniplex';
-import type { CreatureDefinition } from '@/data/creatures';
+import type { CreatureDefinition, CreatureLevel, TargetPriority } from '@/data/creatures';
+import type { ElementId } from '@/data/elements';
 import type { EnemyDefinition } from '@/data/enemies';
+import type { StatusApplication } from '@/data/status';
 import type { CompiledPath } from '@/lib/pathing';
+import type { StatusTimers } from '../systems/status';
+import type { ActiveWave } from '../systems/waves';
+
+export type { TargetPriority };
+export type TowerLevel = CreatureLevel;
+
+export interface TowerStats {
+  damage: number;
+  range: number;
+  cooldown: number;
+  targets: CreatureDefinition['targets'];
+  splash: number;
+  status: StatusApplication | undefined;
+  support: CreatureDefinition['support'];
+  income: CreatureDefinition['income'];
+  airMultiplier: number;
+}
 
 export interface Position {
   x: number;
@@ -18,9 +37,20 @@ export interface GameEntity {
   enemy?: {
     definition: EnemyDefinition;
     path: CompiledPath;
+    pathIndex: number;
+    wave: ActiveWave;
     progress: number;
     health: number;
     maxHealth: number;
+    shield: number;
+    maxShield: number;
+    speed: number;
+    haste: number;
+    hasteRemaining: number;
+    abilityCooldown: number;
+    statuses: StatusTimers;
+    movementFactor: number;
+    visible: boolean;
     escaped: boolean;
   };
   tower?: {
@@ -29,12 +59,25 @@ export interface GameEntity {
     heading: number;
     cooldown: number;
     target: EnemyEntity | null;
+    level: TowerLevel;
+    evolved: boolean;
+    totalSpent: number;
+    priority: TargetPriority;
+    stats: TowerStats;
+    effectiveRange: number;
+    effectiveDamage: number;
+    incomeRemaining: number;
   };
   projectile?: {
     color: string;
     damage: number;
     speed: number;
     target: EnemyEntity | null;
+    element: ElementId;
+    targets: CreatureDefinition['targets'];
+    splash: number;
+    status: StatusApplication | undefined;
+    airMultiplier: number;
   };
   effect?: true;
 }

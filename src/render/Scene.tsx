@@ -5,6 +5,7 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useMemo, useRef, type ComponentRef } from "react";
 import { Color, MOUSE, TOUCH, Vector3 } from "three";
 import type { MapDefinition } from "@/data/maps/types";
+import type { EnemyEntity } from "@/game/ecs/world";
 import type { GameRuntime } from "@/game/runtime";
 import { Enemies } from "./Enemies";
 import { Map } from "./Map";
@@ -16,6 +17,7 @@ interface SceneProps {
   runtime?: GameRuntime;
   selectedSlot?: string | null;
   onSelectSlot?: (id: string) => void;
+  onSelectEnemy?: (entity: EnemyEntity) => void;
 }
 
 const dioramaTarget: [number, number, number] = [0, 0.17, 0];
@@ -99,21 +101,25 @@ function Background({ tint }: { tint: string }) {
   );
 }
 
-function BattleEntities({ runtime, selectedSlot }: { runtime: GameRuntime; selectedSlot?: string | null }) {
+function BattleEntities({ runtime, selectedSlot, onSelectEnemy }: {
+  runtime: GameRuntime;
+  selectedSlot?: string | null;
+  onSelectEnemy?: SceneProps["onSelectEnemy"];
+}) {
   const alpha = useRef(0);
   useFrame((_, delta) => {
     alpha.current = runtime.advance(delta);
   }, -2);
   return (
     <>
-      <Enemies runtime={runtime} alpha={alpha} />
+      <Enemies runtime={runtime} alpha={alpha} onSelectEnemy={onSelectEnemy} />
       <Projectiles runtime={runtime} alpha={alpha} />
       <Towers runtime={runtime} selectedSlot={selectedSlot} />
     </>
   );
 }
 
-export function Scene({ map, runtime, selectedSlot, onSelectSlot }: SceneProps) {
+export function Scene({ map, runtime, selectedSlot, onSelectSlot, onSelectEnemy }: SceneProps) {
   return (
     <Canvas
       orthographic
@@ -142,7 +148,7 @@ export function Scene({ map, runtime, selectedSlot, onSelectSlot }: SceneProps) 
       <Background tint={map.theme.atmosphere} />
       <Map map={map} selectedSlot={selectedSlot} onSelectSlot={onSelectSlot} />
       <DioramaCamera map={map} />
-      {runtime && <BattleEntities runtime={runtime} selectedSlot={selectedSlot} />}
+      {runtime && <BattleEntities runtime={runtime} selectedSlot={selectedSlot} onSelectEnemy={onSelectEnemy} />}
     </Canvas>
   );
 }

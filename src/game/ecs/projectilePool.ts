@@ -1,4 +1,5 @@
 import type { World } from 'miniplex';
+import { starterCreature } from '@/data/creatures';
 import { createPosition, snapshotPosition, type GameEntity, type ProjectileEntity, type EnemyEntity, type TowerEntity } from './world';
 
 const CAPACITY = 512;
@@ -8,7 +9,10 @@ export function createProjectilePool(world: World<GameEntity>) {
   const available = Array.from({ length: CAPACITY }, (_, index): ProjectileEntity => ({
     id: -1 - index,
     position: createPosition(),
-    projectile: { color: '', damage: 0, speed: 0, target: null },
+    projectile: {
+      color: '', damage: 0, speed: 0, target: null, element: starterCreature.element,
+      targets: 'none', splash: 0, status: undefined, airMultiplier: 1,
+    },
   }));
 
   return {
@@ -23,9 +27,14 @@ export function createProjectilePool(world: World<GameEntity>) {
       position.z = tower.position.z;
       snapshotPosition(position);
       projectile.color = definition.color;
-      projectile.damage = definition.damage;
+      projectile.damage = tower.tower.effectiveDamage;
       projectile.speed = definition.projectileSpeed;
       projectile.target = target;
+      projectile.element = definition.element;
+      projectile.targets = tower.tower.stats.targets;
+      projectile.splash = tower.tower.stats.splash;
+      projectile.status = tower.tower.stats.status;
+      projectile.airMultiplier = tower.tower.stats.airMultiplier;
       world.add(entity);
       return true;
     },

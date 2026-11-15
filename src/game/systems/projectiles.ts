@@ -1,7 +1,23 @@
 import type { ProjectilePool } from '../ecs/projectilePool';
-import { snapshotPosition, type ProjectileEntity } from '../ecs/world';
+import { snapshotPosition, type EnemyEntity, type ProjectileEntity } from '../ecs/world';
+import { damageEnemy } from './damage';
+import { canHitTarget } from './targeting';
 
-export function projectileSystem(entities: readonly ProjectileEntity[], pool: ProjectilePool, delta: number) {
+function splashDamage(target: EnemyEntity, projectile: ProjectileEntity['projectile'], enemies: readonly EnemyEntity[]) {
+  const radiusSquared = projectile.splash ** 2;
+  if (radiusSquared === 0) return;
+
+  for (const other of enemies) {
+    if (other === target || !canHitTarget(other, projectile.targets)) continue;
+    const dx = target.position.x - other.position.x;
+    const dz = target.position.z - other.position.z;
+    if (dx * dx + dz * dz <= radiusSquared) damageEnemy(other, projectile);
+  }
+}
+
+export function projectileSystem(
+  entities: readonly ProjectileEntity[], enemies: readonly EnemyEntity[], pool: ProjectilePool, delta: number,
+) {
   for (let index = entities.length - 1; index >= 0; index--) {
     const entity = entities[index];
     const { position, projectile } = entity;
@@ -17,7 +33,8 @@ export function projectileSystem(entities: readonly ProjectileEntity[], pool: Pr
     const step = projectile.speed * delta;
     const distanceSquared = dx * dx + dy * dy + dz * dz;
     if (distanceSquared <= step * step) {
-      target.enemy.health = Math.max(0, target.enemy.health - projectile.damage);
+      damageEnemy(target, projectile);
+      splashDamage(target, projectile, enemies);
       pool.release(entity);
       continue;
     }

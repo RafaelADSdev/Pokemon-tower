@@ -1,24 +1,30 @@
 import type { StoreApi } from 'zustand';
-import { creatureById, starterCreature } from '@/data/creatures';
-import type { EnemyDefinition } from '@/data/enemies';
+import { creatureById, getCreatureStats, starterCreature, targetPriorities } from '@/data/creatures';
+import { enemyById, type EnemyDefinition } from '@/data/enemies';
 import type { MapDefinition } from '@/data/maps/types';
+import { gameRules } from '@/data/rules';
 import { forestWaves } from '@/data/waves/forest';
 import type { WaveDefinition } from '@/data/waves/types';
-import { compilePath } from '@/lib/pathing';
+import { compilePath, samplePath } from '@/lib/pathing';
 import { createProjectilePool } from './ecs/projectilePool';
-import { createGameWorld, createPosition, type EnemyEntity, type TowerEntity } from './ecs/world';
+import { createGameWorld, createPosition, snapshotPosition, type EnemyEntity, type TargetPriority, type TowerEntity } from './ecs/world';
 import { createGameStore, type GameState } from './store/gameStore';
+import { abilitySystem } from './systems/abilities';
 import { cleanupSystem, type EconomyDelta } from './systems/cleanup';
 import { combatSystem } from './systems/combat';
-import { economySystem } from './systems/economy';
+import { economySystem, incomeSystem } from './systems/economy';
 import { movementSystem } from './systems/movement';
 import { projectileSystem } from './systems/projectiles';
+import { createStatusTimers, statusSystem } from './systems/status';
+import { revealSystem, updateTowerBuffs } from './systems/support';
 import { targetingSystem } from './systems/targeting';
+import { createTowerStats } from './systems/towerStats';
 import { createWave, waveSystem, type ActiveWave } from './systems/waves';
 import { createGameClock } from './time';
 
 const DEFAULT_SEED = 0x8d75a121;
 const ENEMY_BODY_HEIGHT = 0.45;
+const FLYING_HEIGHT = 1.25;
 
 interface RuntimeOptions {
   waves?: readonly WaveDefinition[];
@@ -33,31 +39,60 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
   const store = options.store ?? createGameStore();
   const definitions = options.waves ?? forestWaves;
   const paths = map.paths.map(compilePath);
+  const airPaths = paths.map(({ waypoints }) => compilePath([waypoints[0], waypoints[waypoints.length - 1]]));
   if (!paths.length) throw new Error(`Map ${map.id} has no path`);
 
-  const economy: EconomyDelta = { reward: 0, livesLost: 0 };
+  const economy: EconomyDelta = { reward: 0, livesLost: 0, selectedEnemyGone: false };
+  const activeWaves: ActiveWave[] = [];
   const seed = (options.seed ?? DEFAULT_SEED) >>> 0 || DEFAULT_SEED;
   let random = seed;
   let nextEntityId = 1;
-  let activeWave: ActiveWave | null = null;
   let alpha = 0;
 
   store.getState().reset(definitions.length);
 
-  function spawnEnemy(definition: EnemyDefinition) {
+  function randomPathIndex() {
     random ^= random << 13;
     random ^= random >>> 17;
     random ^= random << 5;
-    const path = paths[(random >>> 0) % paths.length];
-    const [x, z] = path.waypoints[0];
+    return (random >>> 0) % paths.length;
+  }
+
+  function spawnEnemy(definition: EnemyDefinition, wave: ActiveWave, requestedPath?: number, progress = 0) {
+    const { flying, stealth, shield, boss } = definition.traits;
+    const pathIndex = requestedPath !== undefined && paths[requestedPath] ? requestedPath : randomPathIndex();
+    const path = flying ? airPaths[pathIndex] : paths[pathIndex];
+    const maxHealth = definition.health * wave.healthScale;
+    const maxShield = (shield?.health ?? 0) * wave.healthScale;
+    const position = createPosition(0, flying ? FLYING_HEIGHT : ENEMY_BODY_HEIGHT, 0);
+    samplePath(path, progress, position);
+    snapshotPosition(position);
+
     const entity: EnemyEntity = {
       id: nextEntityId++,
-      position: createPosition(x, ENEMY_BODY_HEIGHT, z),
+      position,
       enemy: {
-        definition, path, progress: 0, health: definition.health, maxHealth: definition.health, escaped: false,
+        definition, path, pathIndex, wave, progress,
+        health: maxHealth, maxHealth, shield: maxShield, maxShield, speed: definition.speed * wave.speedScale,
+        haste: 0, hasteRemaining: 0, abilityCooldown: boss?.interval ?? 0, statuses: createStatusTimers(),
+        movementFactor: 1, visible: !stealth, escaped: false,
       },
     };
+    wave.alive++;
     world.add(entity);
+  }
+
+  function splitEnemy({ enemy }: EnemyEntity) {
+    const child = enemy.definition.traits.split;
+    if (!child) return;
+    const definition = Object.hasOwn(enemyById, child.enemyId) ? enemyById[child.enemyId] : undefined;
+    if (!definition) throw new Error(`Unknown split enemy: ${child.enemyId}`);
+
+    for (let index = 0; index < child.count; index++) spawnEnemy(definition, enemy.wave, enemy.pathIndex, enemy.progress);
+  }
+
+  function getTower(slotId: string) {
+    return queries.towers.entities.find(({ tower }) => tower.slotId === slotId);
   }
 
   function clearProjectiles() {
@@ -66,35 +101,43 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
   }
 
   function step(delta: number) {
-    if (!activeWave) return;
-    waveSystem(activeWave, delta, spawnEnemy);
+    if (!activeWaves.length) return;
+    for (const wave of activeWaves) waveSystem(wave, delta, spawnEnemy);
 
     const enemies = queries.enemies.entities;
     const towers = queries.towers.entities;
+    statusSystem(enemies, delta);
+    abilitySystem(enemies, delta);
     movementSystem(enemies, delta);
+    revealSystem(towers, enemies);
     targetingSystem(towers, enemies, delta);
     combatSystem(towers, pool);
-    projectileSystem(queries.projectiles.entities, pool, delta);
-    cleanupSystem(enemies, world, economy);
+    projectileSystem(queries.projectiles.entities, enemies, pool, delta);
+    const { selectedEnemyId, lives } = store.getState();
+    cleanupSystem(enemies, world, economy, selectedEnemyId, splitEnemy);
+    economy.reward += incomeSystem(towers, delta);
 
-    if (economySystem(store, economy) === 0) {
-      activeWave = null;
-      clearProjectiles();
-      store.setState({ status: 'defeat' });
-    } else if (!activeWave.remaining && !enemies.length) {
-      const { wave, maxWaves, money } = store.getState();
-      const bonus = activeWave.bonus;
-      activeWave = null;
-      clearProjectiles();
-      store.setState({ money: money + bonus, status: wave === maxWaves ? 'victory' : 'ready' });
+    let completed = 0;
+    for (let index = activeWaves.length - 1; index >= 0; index--) {
+      const wave = activeWaves[index];
+      if (wave.remaining || wave.alive) continue;
+      economy.reward += wave.bonus;
+      activeWaves.copyWithin(index, index + 1);
+      activeWaves.pop();
+      completed++;
     }
+
+    if (lives <= economy.livesLost) activeWaves.length = 0;
+    if (!activeWaves.length) clearProjectiles();
+    economySystem(store, economy, activeWaves.length, completed);
   }
 
   return {
     store,
     queries,
+    waves: definitions,
     advance(deltaSeconds: number) {
-      if (!activeWave) return alpha;
+      if (!activeWaves.length) return alpha;
       const { speed, paused } = store.getState();
       alpha = clock.advance(deltaSeconds, speed, paused, step);
       return alpha;
@@ -103,19 +146,21 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
     startWave() {
       const { paused, status, wave } = store.getState();
       const definition = definitions[wave];
-      if (paused || status !== 'ready' || !definition) return false;
+      if (paused || (status !== 'ready' && status !== 'running') || !definition) return false;
 
-      activeWave = createWave(definition);
-      const towers = queries.towers.entities;
-      for (const { tower } of towers) tower.cooldown = 0;
-      clock.reset();
-      alpha = 0;
-      store.setState({ status: 'running', wave: wave + 1 });
+      if (!activeWaves.length) {
+        const towers = queries.towers.entities;
+        for (const { tower } of towers) tower.cooldown = 0;
+        clock.reset();
+        alpha = 0;
+      }
+      activeWaves.push(createWave(definition));
+      store.setState({ status: 'running', wave: wave + 1, wavesActive: activeWaves.length });
       return true;
     },
 
     placeTower(slotId: string, creatureId = starterCreature.id) {
-      const { money, occupiedSlots, paused, status } = store.getState();
+      const { money, occupiedSlots, paused, status, towerRevision } = store.getState();
       if (paused || (status !== 'ready' && status !== 'running') || Object.hasOwn(occupiedSlots, slotId)) return false;
 
       const slot = map.slots.find(({ id }) => id === slotId);
@@ -123,22 +168,85 @@ export function createGameRuntime(map: MapDefinition, options: RuntimeOptions = 
       if (!slot || !definition || money < definition.cost) return false;
 
       const [x, z] = slot.position;
+      const stats = createTowerStats(definition, 1);
       const entity: TowerEntity = {
         id: nextEntityId++,
         position: createPosition(x, 0, z),
-        tower: { definition, slotId, heading: 0, cooldown: 0, target: null },
+        tower: {
+          definition, slotId, heading: 0, cooldown: 0, target: null, level: 1, evolved: false,
+          totalSpent: definition.cost, priority: 'first', stats,
+          effectiveRange: stats.range, effectiveDamage: stats.damage, incomeRemaining: stats.income?.interval ?? 0,
+        },
       };
       world.add(entity);
-      store.setState({ money: money - definition.cost, occupiedSlots: { ...occupiedSlots, [slotId]: definition.id } });
+      updateTowerBuffs(queries.towers.entities);
+      store.setState({
+        money: money - definition.cost,
+        occupiedSlots: { ...occupiedSlots, [slotId]: definition.id },
+        towerRevision: towerRevision + 1,
+      });
       return true;
     },
 
-    getTower(slotId: string) {
-      return queries.towers.entities.find(({ tower }) => tower.slotId === slotId);
+    getTower,
+    getEnemy(id: number) {
+      return queries.enemies.entities.find((entity) => entity.id === id);
+    },
+
+    upgradeTower(slotId: string) {
+      const { money, paused, status, towerRevision } = store.getState();
+      if (paused || (status !== 'ready' && status !== 'running')) return false;
+      const tower = getTower(slotId)?.tower;
+      if (!tower || tower.level === 3) return false;
+
+      const level = tower.level === 1 ? 2 : 3;
+      const cost = getCreatureStats(tower.definition, level).cost;
+      if (money < cost) return false;
+
+      const stats = createTowerStats(tower.definition, level);
+      if (stats.income) tower.incomeRemaining = Math.min(tower.incomeRemaining || stats.income.interval, stats.income.interval);
+      tower.cooldown = Math.min(tower.cooldown, stats.cooldown);
+      tower.stats = stats;
+      tower.level = level;
+      tower.evolved = level === 3;
+      tower.totalSpent += cost;
+      updateTowerBuffs(queries.towers.entities);
+      store.setState({ money: money - cost, towerRevision: towerRevision + 1 });
+      return true;
+    },
+
+    sellTower(slotId: string) {
+      const { money, occupiedSlots, paused, status, towerRevision } = store.getState();
+      if (paused || (status !== 'ready' && status !== 'running')) return false;
+      const entity = getTower(slotId);
+      if (!entity) return false;
+
+      const nextSlots = { ...occupiedSlots };
+      delete nextSlots[slotId];
+      world.remove(entity);
+      updateTowerBuffs(queries.towers.entities);
+      store.setState({
+        occupiedSlots: nextSlots,
+        towerRevision: towerRevision + 1,
+        money: money + Math.floor(entity.tower.totalSpent * gameRules.sellRefund),
+      });
+      return true;
+    },
+
+    setTargetPriority(slotId: string, priority: TargetPriority) {
+      const { paused, status, towerRevision } = store.getState();
+      if (paused || (status !== 'ready' && status !== 'running') || !targetPriorities.includes(priority)) return false;
+      const tower = getTower(slotId)?.tower;
+      if (!tower) return false;
+      if (tower.priority !== priority) {
+        tower.priority = priority;
+        store.setState({ towerRevision: towerRevision + 1 });
+      }
+      return true;
     },
 
     restart() {
-      activeWave = null;
+      activeWaves.length = 0;
       alpha = 0;
       nextEntityId = 1;
       random = seed;
