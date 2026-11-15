@@ -19,8 +19,6 @@
 }
 .league-home .wordmark { color: var(--league-ink); font: 850 1.04rem/1.05 var(--body); letter-spacing: -.035em; }
 .league-home .wordmark > span { background: #ffeeef; border-color: #f6ccd4; border-radius: .65rem; }
-.league-ball { position: relative; display: block; width: 1.45rem; aspect-ratio: 1; border: 2px solid var(--league-ink); border-radius: 50%; background: linear-gradient(#e84055 0 43%, var(--league-ink) 43% 57%, #fff 57%); }
-.league-ball::after { content: ''; position: absolute; inset: 50% auto auto 50%; width: .53rem; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; border: 2px solid var(--league-ink); background: #fff; }
 .league-home .site-nav a { color: var(--league-muted); }
 .league-home .site-nav a[aria-current], .league-home .site-nav a:hover { background: #fbeaf0; color: var(--league-red); }
 .league-home .site-nav svg { color: currentColor; }

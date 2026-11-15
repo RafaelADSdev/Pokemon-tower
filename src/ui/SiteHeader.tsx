@@ -3,11 +3,11 @@ import { BookOpen, Map, Sprout } from 'lucide-react';
 import { brand } from '@/config/brand';
 import { toggleLanguage, useLocale } from './locale';
 
-export function SiteHeader({ active, action }: { active?: 'maps' | 'collection'; action?: React.ReactNode }) {
+export function SiteHeader({ active, action }: { active?: 'maps' | 'collection' | 'battle'; action?: React.ReactNode }) {
   const { t } = useLocale();
   return (
     <header className="battle-header site-header">
-      <Link href="/" className="wordmark"><span>{active === 'maps' ? <i className="league-ball" aria-hidden="true" /> : <Sprout size={20} aria-hidden="true" />}</span>{brand.name}</Link>
+      <Link href="/" className="wordmark"><span>{active === 'maps' || active === 'battle' ? <i className="league-ball" aria-hidden="true" /> : <Sprout size={20} aria-hidden="true" />}</span>{brand.name}</Link>
       <div className="site-tools">
         <nav className="site-nav" aria-label={t.navigation}>
           <Link href="/#expedicoes" aria-current={active === 'maps' ? 'page' : undefined}><Map size={16} aria-hidden="true" /> {t.expeditions}</Link>

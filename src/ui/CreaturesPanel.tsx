@@ -1,4 +1,4 @@
-import { ArrowUp, Coins, Crosshair, LockKeyhole, Sprout } from 'lucide-react';
+import { ArrowUp, Coins, Crosshair, LockKeyhole } from 'lucide-react';
 import Image from 'next/image';
 import { creatureRoles, getCreatureAppearance, getCreatureStats, targetPriorities, type TargetPriority } from '@/data/creatures';
 import { getCreatureUnlockStars } from '@/data/progression';
@@ -28,7 +28,10 @@ export function CreaturesPanel({ runtime, game, totalStars }: { runtime: GameRun
     const number = new Intl.NumberFormat(language, { maximumFractionDigits: 2 });
     return (
       <section className="battle-panel creature-panel" aria-labelledby="tower-title">
-        <div className="panel-heading"><h2 id="tower-title"><ElementGlyph element={definition.element} size={19} />{localized(display)}</h2><span>{position} · {t.level} {level}</span></div>
+        <div className="panel-heading">
+          <h2 id="tower-title"><span className="panel-emblem tower-emblem"><ElementGlyph element={definition.element} size={18} /></span>{localized(display)}</h2>
+          <span className="panel-count">{position} · {t.level} {level}</span>
+        </div>
         <p className="panel-copy">{describe(display)}</p>
         <dl className="tower-stats">
           {stats.targets !== 'none' && <>
@@ -64,18 +67,21 @@ export function CreaturesPanel({ runtime, game, totalStars }: { runtime: GameRun
 
   return (
     <section className="battle-panel creature-panel" aria-labelledby="recruit-title">
-      <div className="panel-heading"><h2 id="recruit-title"><Sprout size={18} aria-hidden="true" /> {t.creatures}</h2>{position && <span>{position}</span>}</div>
-      <p className="panel-copy" role="status">{position ? t.pickCreature : t.pickPosition}</p>
+      <div className="panel-heading">
+        <h2 id="recruit-title"><span className="panel-emblem"><Crosshair size={18} aria-hidden="true" /></span>{t.creatures}</h2>
+        {position && <span className="panel-count selected-position">{position}</span>}
+      </div>
+      <p className="panel-copy recruit-instruction" role="status">{position ? t.pickCreature : t.pickPosition}</p>
       <div className="recruit-list">
         {runtime.roster.map((creature) => {
           const required = getCreatureUnlockStars(creature.id);
           const locked = totalStars < required;
           return (
-            <button type="button" className="recruit" key={creature.id} data-locked={locked} disabled={locked || !selectedSlot || !active || money < creature.cost}
+            <button type="button" className="recruit" key={creature.id} data-element={creature.element} data-locked={locked} disabled={locked || !selectedSlot || !active || money < creature.cost}
               onClick={() => selectedSlot && runtime.placeTower(selectedSlot, creature.id)} title={describe(creature)}>
               <span className="recruit-emblem">
-                <Image src={creature.portrait ?? `/images/creatures/${creature.id}.webp`} width={44} height={44} alt="" unoptimized />
-                <ElementGlyph element={creature.element} size={11} />
+                <Image src={creature.portrait ?? `/images/creatures/${creature.id}.webp`} width={48} height={48} alt="" unoptimized />
+                <span className="recruit-element"><ElementGlyph element={creature.element} size={10} /></span>
               </span>
               <span className="recruit-copy">
                 <strong>{localized(creature)}</strong><small>{localized(creatureRoles[creature.role])}</small>

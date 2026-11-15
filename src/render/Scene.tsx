@@ -3,7 +3,7 @@
 import { OrbitControls, OrthographicCamera, PerformanceMonitor } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { lazy, Suspense, useMemo, useRef, useState, type ComponentRef } from "react";
-import { Color, MOUSE, TOUCH, Vector3 } from "three";
+import { Color, MOUSE, TOUCH, Vector2, Vector3 } from "three";
 import { useStore } from "zustand";
 import type { MapDefinition } from "@/data/maps/types";
 import type { EnemyEntity } from "@/game/ecs/world";
@@ -24,8 +24,11 @@ interface SceneProps {
   unavailableMessage?: string;
 }
 
-const dioramaTarget: [number, number, number] = [0, 0.17, 0];
-const cameraPosition: [number, number, number] = [7.1, 25.8, 31.5];
+const dioramaTarget: [number, number, number] = [0, 0.35, 0];
+const cameraPosition: [number, number, number] = [5.6, 30.5, 29.8];
+const cameraDirection = new Vector3(...cameraPosition).sub(new Vector3(...dioramaTarget)).normalize();
+const cameraRight = new Vector3(cameraDirection.z, 0, -cameraDirection.x).normalize();
+const cameraUp = new Vector3().crossVectors(cameraDirection, cameraRight);
 const mouseButtons = { LEFT: MOUSE.PAN, MIDDLE: MOUSE.DOLLY, RIGHT: MOUSE.PAN };
 const touches = { ONE: TOUCH.PAN, TWO: TOUCH.DOLLY_PAN };
 const boardLighting = {
@@ -34,13 +37,25 @@ const boardLighting = {
   volcano: { sky: "#e8c9c1", earth: "#a45239", key: "#ffe0b2", fill: "#fba67d", fillPower: 0.89 },
 };
 
+function frameBoard(width: number, depth: number) {
+  // Project the board's footprint onto both camera axes. The vertical margin
+  // leaves room for the base, towers and enemy health bars.
+  const boardWidth = width + 0.9;
+  const boardDepth = depth + 0.9;
+  return {
+    width: boardWidth * Math.abs(cameraRight.x) + boardDepth * Math.abs(cameraRight.z) + 2.3,
+    height: boardWidth * Math.abs(cameraUp.x) + boardDepth * Math.abs(cameraUp.z) + 4.05,
+  };
+}
+
 function DioramaCamera({ map, reducedMotion }: { map: MapDefinition; reducedMotion: boolean }) {
   const size = useThree((state) => state.size);
   const orbit = useRef<ComponentRef<typeof OrbitControls>>(null);
   const offset = useMemo(() => new Vector3(), []);
   const center = useMemo(() => new Vector3(...dioramaTarget), []);
   const { width, depth } = map.size;
-  const fit = Math.max(1, Math.min(size.width / (width + depth * 0.25 + 1.9), size.height / (depth * 0.78 + 4.8)));
+  const frame = frameBoard(width, depth);
+  const fit = Math.max(1, Math.min(size.width / frame.width, size.height / frame.height));
   const panRadius = Math.min(width, depth) * 0.41;
 
   return (
@@ -73,17 +88,26 @@ function DioramaCamera({ map, reducedMotion }: { map: MapDefinition; reducedMoti
   );
 }
 
-function Background({ tint }: { tint: string }) {
-  const uniforms = useMemo(() => ({
-    color: { value: new Color(tint) },
-    light: { value: new Color(tint).multiplyScalar(2.2) },
-  }), [tint]);
+function Background({ map }: { map: MapDefinition }) {
+  const { accent, atmosphere } = map.theme;
+  const { width, depth } = map.size;
+  const uniforms = useMemo(() => {
+    const tint = new Color(accent);
+    return {
+      color: { value: new Color("#cad5e5").lerp(tint, 0.25) },
+      light: { value: new Color("#fbf9f3").lerp(tint, 0.1) },
+      lines: { value: new Color("#fefefe") },
+      shadow: { value: new Color(atmosphere).lerp(tint, 0.18) },
+      outline: { value: new Vector2(width / 2, depth / 2) },
+    };
+  }, [accent, atmosphere, width, depth]);
 
   return (
-    <mesh position-y={-2.28} rotation-x={-Math.PI / 2}>
+    <mesh position-y={-1.78} rotation-x={-Math.PI / 2}>
       <planeGeometry args={[136, 136]} />
       <shaderMaterial
         uniforms={uniforms}
+        toneMapped={false}
         vertexShader={`
           varying vec2 stage;
           void main() {
@@ -94,14 +118,35 @@ function Background({ tint }: { tint: string }) {
         fragmentShader={`
           uniform vec3 color;
           uniform vec3 light;
+          uniform vec3 lines;
+          uniform vec3 shadow;
+          uniform vec2 outline;
           varying vec2 stage;
+
+          float frame(vec2 point, vec2 bounds, float radius) {
+            vec2 edge = abs(point) - bounds + radius;
+            return length(max(edge, 0.0)) + min(max(edge.x, edge.y), 0.0) - radius;
+          }
+
           void main() {
-            float halo = exp(-0.005 * dot(stage * vec2(0.85, 1.3), stage));
-            float shadow = exp(-0.027 * dot(stage * vec2(0.68, 1.0), stage));
-            vec3 surface = mix(color * 0.39, light, halo);
-            surface *= 1.0 - shadow * 0.57;
+            vec2 field = stage * vec2(0.8, 1.13);
+            float glow = exp(-0.003 * dot(field, field));
+            vec3 surface = mix(color, light, glow);
+            vec2 tiles = stage * 0.5;
+            vec2 seams = abs(fract(tiles - 0.5) - 0.5) / fwidth(tiles);
+            float grid = 1.0 - smoothstep(0.0, 1.4, min(seams.x, seams.y));
+            surface = mix(surface, shadow, grid * 0.065);
+
+            float track = frame(stage, outline + vec2(1.57), 1.22);
+            float edge = 1.0 - smoothstep(0.035, 0.12, abs(track));
+            float innerEdge = 1.0 - smoothstep(0.022, 0.085, abs(track + 0.3));
+            surface = mix(surface, lines, edge * 0.66 + innerEdge * 0.36);
+
+            float falloff = frame(stage - vec2(0.32, 0.46), outline - vec2(0.22), 1.45);
+            float contactShadow = 1.0 - smoothstep(-0.55, 2.45, falloff);
+            surface = mix(surface, shadow, contactShadow * 0.48);
+
             gl_FragColor = vec4(surface, 1.0);
-            #include <tonemapping_fragment>
             #include <colorspace_fragment>
           }
         `}
@@ -167,11 +212,11 @@ export function Scene({
         }}
       >
         <color attach="background" args={[map.theme.atmosphere]} />
-        <hemisphereLight args={[light.sky, light.earth, 1.55]} />
+        <hemisphereLight args={[light.sky, light.earth, 1.7]} />
         <directionalLight
           castShadow={highEffects}
           color={light.key}
-          intensity={2.15}
+          intensity={2.05}
           position={[-8, 14, 7]}
           shadow-mapSize={[1024, 1024]}
           shadow-camera-left={-14}
@@ -183,7 +228,7 @@ export function Scene({
           shadow-normalBias={0.024}
         />
         <directionalLight color={light.fill} intensity={light.fillPower} position={[7, 9, -10]} />
-        <Background tint={map.theme.atmosphere} />
+        <Background map={map} />
         <Map map={map} selectedSlot={selectedSlot} onSelectSlot={onSelectSlot} />
         <DioramaCamera map={map} reducedMotion={reducedMotion} />
         <PerformanceMonitor
